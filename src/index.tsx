@@ -156,7 +156,7 @@ app.get('/work', (c) => {
       <section class="phead" aria-label="Work index">
         <div class="wrap">
           <p class="marker" data-reveal>
-            <span class="idx">—</span> Portfolio · {projects.length} projects
+            <span class="idx">—</span> Portfolio · <span data-results-count role="status" aria-live="polite" aria-atomic="true">{projects.length} projects</span>
           </p>
           <h1 class="display" data-reveal data-reveal-delay="1" style="margin-top:var(--sp-3)">
             Work
@@ -167,19 +167,24 @@ app.get('/work', (c) => {
           </p>
 
           <div class="filters" data-filters aria-label="Filter projects">
-            <button class="is-active" data-filter-type="discipline" data-filter-value="all">All disciplines</button>
-            <button data-filter-type="discipline" data-filter-value="architecture">Architecture</button>
-            <button data-filter-type="discipline" data-filter-value="interior">Interior</button>
+            <button type="button" class="is-active" aria-pressed="true" data-filter-type="discipline" data-filter-value="all">All disciplines</button>
+            <button type="button" aria-pressed="false" data-filter-type="discipline" data-filter-value="architecture">Architecture</button>
+            <button type="button" aria-pressed="false" data-filter-type="discipline" data-filter-value="interior">Interior</button>
             <span style="width:1px;background:var(--line);margin:0 0.4rem"></span>
-            <button class="is-active" data-filter-type="track" data-filter-value="all">All tracks</button>
-            <button data-filter-type="track" data-filter-value="professional">Professional</button>
-            <button data-filter-type="track" data-filter-value="academic">Academic</button>
+            <button type="button" class="is-active" aria-pressed="true" data-filter-type="track" data-filter-value="all">All tracks</button>
+            <button type="button" aria-pressed="false" data-filter-type="track" data-filter-value="professional">Professional</button>
+            <button type="button" aria-pressed="false" data-filter-type="track" data-filter-value="academic">Academic</button>
           </div>
         </div>
       </section>
 
       <section class="section" style="padding-top:0" aria-label="Projects">
         <div class="wrap">
+          <div class="work-empty" data-filter-empty hidden>
+            <h2>No projects match these filters.</h2>
+            <p>Try another discipline or track, or view all projects.</p>
+            <button type="button" data-filter-reset>Reset filters</button>
+          </div>
           <div class="grid" data-grid>
             {projects.map((p, i) => (
               <WorkCard project={p} wide={i % 5 === 0} />

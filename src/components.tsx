@@ -23,11 +23,15 @@ export function Ph(props: {
   const parts = props.src.replace(/^\/img\//, '').split('/')
   const key = `${parts[0] || 'x'}|${parts[1] || 'a'}`
   const style = props.ratio ? `aspect-ratio:${props.ratio};` : ''
+  const Tag = props.lightbox ? 'button' : 'div'
   return (
-    <div
+    <Tag
       class={`ph ${props.class || ''}`}
-      role="img"
-      aria-label={props.alt}
+      type={props.lightbox ? 'button' : undefined}
+      role={props.lightbox ? undefined : 'img'}
+      aria-label={props.lightbox ? `Open image: ${props.alt}` : props.alt}
+      aria-haspopup={props.lightbox ? 'dialog' : undefined}
+      data-image-alt={props.lightbox ? props.alt : undefined}
       data-ph={key}
       data-eager={props.eager ? '' : undefined}
       data-clip={props.clip ? '' : undefined}
@@ -35,7 +39,7 @@ export function Ph(props: {
       data-lightbox={props.lightbox ? '' : undefined}
       data-ratio={props.ratio}
       style={style}
-    ></div>
+    ></Tag>
   )
 }
 

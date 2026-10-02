@@ -429,73 +429,107 @@ ${body}
     if (!bar || !grid) return;
     const cards = Array.from(grid.querySelectorAll('.card'));
 
-    function apply(discipline, track) {
-      cards.forEach((c) => {
-        const okD = discipline === 'all' || c.dataset.discipline === discipline;
-        const okT = track === 'all' || c.dataset.track === track;
-        c.classList.toggle('is-filtered', !(okD && okT));
+    const buttons = Array.from(bar.querySelectorAll('button[data-filter-type]'));
+    const count = document.querySelector('[data-results-count]');
+    const empty = document.querySelector('[data-filter-empty]');
+    const reset = document.querySelector('[data-filter-reset]');
+    let selected = { discipline: 'all', track: 'all' };
+
+    function apply(filters) {
+      // Unknown URL values fall back to the corresponding unfiltered group.
+      for (const type of ['discipline', 'track']) {
+        selected[type] = buttons.some((button) =>
+          button.dataset.filterType === type && button.dataset.filterValue === filters[type]
+        ) ? filters[type] : 'all';
+      }
+      let visible = 0;
+      cards.forEach((card) => {
+        const matches = (selected.discipline === 'all' || card.dataset.discipline === selected.discipline)
+          && (selected.track === 'all' || card.dataset.track === selected.track);
+        card.classList.toggle('is-filtered', !matches);
+        if (matches) visible += 1;
       });
+      buttons.forEach((button) => {
+        const active = selected[button.dataset.filterType] === button.dataset.filterValue;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      if (count) count.textContent = visible === cards.length
+        ? `${visible} projects` : `${visible} of ${cards.length} projects`;
+      if (empty) empty.hidden = visible !== 0;
+      const url = new URL(location.href);
+      for (const type of ['discipline', 'track']) {
+        if (selected[type] === 'all') url.searchParams.delete(type);
+        else url.searchParams.set(type, selected[type]);
+      }
+      history.replaceState(null, '', url);
     }
 
-    bar.querySelectorAll('button').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const type = btn.dataset.filterType; // 'discipline' | 'track'
-        // deactivate siblings of same group
-        bar.querySelectorAll('button[data-filter-type="' + type + '"]').forEach((b) => b.classList.remove('is-active'));
-        btn.classList.add('is-active');
-        const d = bar.querySelector('button[data-filter-type="discipline"].is-active')?.dataset.filterValue || 'all';
-        const t = bar.querySelector('button[data-filter-type="track"].is-active')?.dataset.filterValue || 'all';
-        apply(d, t);
-        const url = new URL(location.href);
-        d === 'all' ? url.searchParams.delete('discipline') : url.searchParams.set('discipline', d);
-        t === 'all' ? url.searchParams.delete('track') : url.searchParams.set('track', t);
-        history.replaceState(null, '', url);
-      });
+    buttons.forEach((button) => button.addEventListener('click', () => {
+      apply({ ...selected, [button.dataset.filterType]: button.dataset.filterValue });
+    }));
+    reset?.addEventListener('click', () => {
+      apply({ discipline: 'all', track: 'all' });
+      // The reset button is now hidden; return focus to a visible control.
+      buttons[0]?.focus();
     });
-
-    // Apply initial state from URL
-    const p = new URLSearchParams(location.search);
-    const d0 = p.get('discipline') || 'all';
-    const t0 = p.get('track') || 'all';
-    bar.querySelectorAll('button').forEach((b) => {
-      if (b.dataset.filterType === 'discipline') b.classList.toggle('is-active', b.dataset.filterValue === d0);
-      if (b.dataset.filterType === 'track') b.classList.toggle('is-active', b.dataset.filterValue === t0);
-    });
-    apply(d0, t0);
+    function applyUrl() {
+      const params = new URLSearchParams(location.search);
+      apply({ discipline: params.get('discipline'), track: params.get('track') });
+    }
+    window.addEventListener('popstate', applyUrl);
+    applyUrl();
   }
 
   /* ------------------------------------------------------------------ *
-   * 5. LIGHTBOX
+   * 5. LIGHTBOX — native dialog supplies modal focus containment and Escape.
    * ------------------------------------------------------------------ */
   function initLightbox() {
     const items = document.querySelectorAll('[data-lightbox]');
     if (!items.length) return;
-    const box = document.createElement('div');
+    const box = document.createElement('dialog');
     box.className = 'lightbox';
-    box.setAttribute('role', 'dialog');
-    box.setAttribute('aria-modal', 'true');
-    box.innerHTML = '<button class="lightbox__close" aria-label="Close">Close ✕</button><div class="lightbox__stage"></div>';
+    box.setAttribute('aria-label', 'Project image viewer');
+    box.innerHTML = '<button type="button" class="lightbox__close" aria-label="Close image viewer">Close ✕</button><div class="lightbox__stage"></div>';
     document.body.appendChild(box);
     const stage = box.querySelector('.lightbox__stage');
-    const close = () => { box.classList.remove('is-open'); document.documentElement.style.overflow = ''; stage.innerHTML = ''; };
+    const closeButton = box.querySelector('.lightbox__close');
+    let opener = null;
+    let previousOverflow = '';
 
-    items.forEach((it) => {
-      it.addEventListener('click', () => {
-        const ph = it.getAttribute('data-ph');
-        const div = document.createElement('div');
-        div.className = 'ph';
-        div.style.width = 'min(90vw, 1400px)';
-        div.style.aspectRatio = it.getAttribute('data-ratio') || '3 / 2';
-        div.setAttribute('data-ph', ph);
-        stage.innerHTML = '';
-        stage.appendChild(div);
-        resolvePlaceholder(div);
+    box.addEventListener('close', () => {
+      box.classList.remove('is-open');
+      document.documentElement.style.overflow = previousOverflow;
+      stage.replaceChildren();
+      opener?.focus({ preventScroll: true });
+      opener = null;
+    });
+    closeButton.addEventListener('click', () => box.close());
+    box.addEventListener('click', (event) => {
+      if (event.target === box) box.close();
+    });
+
+    items.forEach((item) => {
+      // Native buttons activate with Enter and Space as well as pointer input.
+      item.addEventListener('click', () => {
+        if (box.open) return;
+        opener = item;
+        previousOverflow = document.documentElement.style.overflow;
+        const image = document.createElement('div');
+        image.className = 'ph';
+        image.style.width = 'min(90vw, 1400px)';
+        image.style.aspectRatio = item.getAttribute('data-ratio') || '3 / 2';
+        image.setAttribute('data-ph', item.getAttribute('data-ph'));
+        image.setAttribute('role', 'img');
+        image.setAttribute('aria-label', item.getAttribute('data-image-alt') || 'Project image');
+        stage.replaceChildren(image);
+        resolvePlaceholder(image);
         box.classList.add('is-open');
+        box.showModal();
         document.documentElement.style.overflow = 'hidden';
+        closeButton.focus();
       });
     });
-    box.addEventListener('click', (e) => { if (e.target === box || e.target.classList.contains('lightbox__close')) close(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
   }
 
   /* ------------------------------------------------------------------ *
