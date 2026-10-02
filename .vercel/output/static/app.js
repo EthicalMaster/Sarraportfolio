@@ -1,0 +1,530 @@
+/* ==========================================================================
+   SARRA SAIFEE — client runtime
+   Progressive enhancement only. The site is fully readable without JS.
+   Modules:
+     1. Generative placeholder imagery (lightweight SVG "architectural" renders)
+     2. Reveal / scroll-driven motion (IntersectionObserver + rAF parallax)
+     3. Navigation (hide-on-scroll, mobile menu)
+     4. Work filtering
+     5. Lightbox gallery
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ------------------------------------------------------------------ *
+   * 1. GENERATIVE PLACEHOLDER IMAGERY
+   * ------------------------------------------------------------------ *
+   * Instead of shipping heavy JPGs, each placeholder is an inline SVG
+   * data-URI that suggests an architectural photograph/render: layered
+   * planes, an implied light source, a horizon, and soft grain. This is
+   * a few hundred bytes, loads instantly, and never causes layout shift.
+   * Real imagery can later replace these by swapping the `src` in data.
+   * ------------------------------------------------------------------ */
+
+  // deterministic hash so the same seed always yields the same image
+  function hash(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0);
+  }
+  function mulberry(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Warm architectural palettes keyed loosely by seed.
+  // [0]=deep shadow  [1]=mid-dark  [2]=mid  [3]=warm light  [4]=highlight
+  const PALETTES = [
+    ['#17140f', '#2c261d', '#5a4e3c', '#a8906c', '#e9dcc4'], // warm stone / travertine
+    ['#12141a', '#23292f', '#48525c', '#8792a0', '#d3dae2'], // cool concrete / dusk
+    ['#1a130c', '#3b2b1a', '#77593a', '#bb8f5e', '#eed7ac'], // timber / golden hour
+    ['#141310', '#2a2721', '#575043', '#9a8f78', '#e2d7c1'], // neutral plaster
+    ['#0f1412', '#1f2a26', '#415049', '#7d9184', '#cfdad1'], // sage / patina
+  ];
+
+  const F = (n) => n.toFixed(2);
+
+  /**
+   * svgFor — generates a cinematic architectural scene as an inline SVG.
+   * Two archetypes chosen by seed:
+   *   'interior' — one-point perspective room: receding floor grid, side walls,
+   *                a bright back opening (window/door) as the light source.
+   *   'exterior' — layered building masses with atmospheric perspective,
+   *                a low sun, long shadows and a horizon.
+   * Both share: soft graded sky/ground, volumetric light wash, fine grain,
+   * and a subtle vignette for depth. Deterministic per seed+variant.
+   */
+  function svgFor(seed, variant, w, h) {
+    const rnd = mulberry(hash(seed + '|' + variant));
+    const pal = PALETTES[hash(seed) % PALETTES.length];
+    const interior = rnd() > 0.42;
+    const uid = (hash(seed + variant) % 100000).toString(36);
+    // vanishing point / light origin
+    const vpx = 34 + rnd() * 32;
+    const vpy = 40 + rnd() * 18;
+
+    const defs =
+`<linearGradient id='sky${uid}' x1='0' y1='0' x2='0' y2='1'>
+<stop offset='0' stop-color='${pal[4]}'/><stop offset='0.6' stop-color='${pal[3]}'/><stop offset='1' stop-color='${pal[2]}'/>
+</linearGradient>
+<linearGradient id='grd${uid}' x1='0' y1='0' x2='0' y2='1'>
+<stop offset='0' stop-color='${pal[2]}'/><stop offset='1' stop-color='${pal[0]}'/>
+</linearGradient>
+<radialGradient id='sun${uid}' cx='${F(vpx)}%' cy='${F(vpy)}%' r='75%'>
+<stop offset='0' stop-color='${pal[4]}' stop-opacity='0.95'/>
+<stop offset='0.4' stop-color='${pal[3]}' stop-opacity='0.28'/>
+<stop offset='1' stop-color='${pal[0]}' stop-opacity='0'/>
+</radialGradient>
+<radialGradient id='vig${uid}' cx='50%' cy='46%' r='72%'>
+<stop offset='0.55' stop-color='#000' stop-opacity='0'/>
+<stop offset='1' stop-color='#000' stop-opacity='0.5'/>
+</radialGradient>`;
+
+    let body = '';
+
+    if (interior) {
+      // ---- ONE-POINT PERSPECTIVE ROOM ----
+      const openW = 16 + rnd() * 16;       // back opening (light) half-width
+      const openTop = 20 + rnd() * 14;
+      const openBot = 66 + rnd() * 8;
+      const ox1 = vpx - openW / 2, ox2 = vpx + openW / 2;
+      // back wall + bright opening
+      body += `<rect width='100' height='100' fill='${pal[1]}'/>`;
+      body += `<rect x='${F(ox1)}' y='${F(openTop)}' width='${F(openW)}' height='${F(openBot - openTop)}' fill='url(#sky${uid})'/>`;
+      // side walls (converging quads to vanishing point)
+      body += `<polygon points='0,0 ${F(ox1)},${F(openTop)} ${F(ox1)},${F(openBot)} 0,100' fill='${pal[0]}' opacity='0.9'/>`;
+      body += `<polygon points='100,0 ${F(ox2)},${F(openTop)} ${F(ox2)},${F(openBot)} 100,100' fill='${pal[0]}' opacity='0.78'/>`;
+      // ceiling + floor planes
+      body += `<polygon points='0,0 100,0 ${F(ox2)},${F(openTop)} ${F(ox1)},${F(openTop)}' fill='${pal[1]}' opacity='0.85'/>`;
+      body += `<polygon points='0,100 100,100 ${F(ox2)},${F(openBot)} ${F(ox1)},${F(openBot)}' fill='url(#grd${uid})'/>`;
+      // receding floor grid lines (toward VP)
+      for (let i = 1; i <= 5; i++) {
+        const t = i / 6;
+        const xl = 0 + (ox1 - 0) * t, xr = 100 + (ox2 - 100) * t;
+        const y = 100 + (openBot - 100) * t;
+        body += `<line x1='${F(xl)}' y1='${F(y)}' x2='${F(xr)}' y2='${F(y)}' stroke='${pal[3]}' stroke-width='0.18' opacity='${F(0.28 - i * 0.03)}'/>`;
+      }
+      for (let i = 0; i <= 6; i++) {
+        const fx = i / 6;
+        const bx = ox1 + openW * fx;
+        const px = fx * 100;
+        body += `<line x1='${F(px)}' y1='100' x2='${F(bx)}' y2='${F(openBot)}' stroke='${pal[3]}' stroke-width='0.15' opacity='0.14'/>`;
+      }
+      // window mullions across the opening
+      const mull = 2 + Math.floor(rnd() * 3);
+      for (let m = 1; m < mull; m++) {
+        const mx = ox1 + (openW * m) / mull;
+        body += `<line x1='${F(mx)}' y1='${F(openTop)}' x2='${F(mx)}' y2='${F(openBot)}' stroke='${pal[0]}' stroke-width='0.4' opacity='0.6'/>`;
+      }
+      body += `<line x1='${F(ox1)}' y1='${F(openTop + (openBot - openTop) * 0.5)}' x2='${F(ox2)}' y2='${F(openTop + (openBot - openTop) * 0.5)}' stroke='${pal[0]}' stroke-width='0.4' opacity='0.5'/>`;
+      // light spill onto floor
+      body += `<polygon points='${F(ox1)},${F(openBot)} ${F(ox2)},${F(openBot)} ${F(vpx + openW * 0.9)},100 ${F(vpx - openW * 0.9)},100' fill='${pal[4]}' opacity='0.10'/>`;
+    } else {
+      // ---- EXTERIOR: LAYERED MASSES + ATMOSPHERE ----
+      const horizon = 52 + rnd() * 16;
+      body += `<rect width='100' height='100' fill='${pal[1]}'/>`;
+      body += `<rect width='100' height='${F(horizon)}' fill='url(#sky${uid})'/>`;
+      body += `<rect y='${F(horizon)}' width='100' height='${F(100 - horizon)}' fill='url(#grd${uid})'/>`;
+      // 3 receding tonal bands (atmospheric perspective) behind masses
+      for (let b = 0; b < 3; b++) {
+        const by = horizon - 4 - b * 5;
+        body += `<rect y='${F(by)}' width='100' height='6' fill='${pal[2]}' opacity='${F(0.1 + b * 0.05)}'/>`;
+      }
+      // building volumes, larger toward foreground
+      const masses = 4 + Math.floor(rnd() * 3);
+      for (let i = 0; i < masses; i++) {
+        const depth = i / masses;               // 0 far → 1 near
+        const bw = 10 + rnd() * 22 + depth * 12;
+        const x = rnd() * (100 - bw);
+        const top = horizon - (10 + rnd() * 34 + depth * 18);
+        const shade = pal[1 + Math.floor(rnd() * 2 + depth)];
+        const op = F(0.55 + depth * 0.4);
+        body += `<rect x='${F(x)}' y='${F(top)}' width='${F(bw)}' height='${F(horizon - top + 4)}' fill='${shade}' opacity='${op}'/>`;
+        // window grid on facade
+        const cols = 2 + Math.floor(rnd() * 3), rows = 2 + Math.floor(rnd() * 4);
+        for (let cx = 1; cx < cols; cx++) {
+          const lx = x + (bw * cx) / cols;
+          body += `<line x1='${F(lx)}' y1='${F(top)}' x2='${F(lx)}' y2='${F(horizon)}' stroke='${pal[0]}' stroke-width='0.2' opacity='0.45'/>`;
+        }
+        for (let ry = 1; ry < rows; ry++) {
+          const ly = top + ((horizon - top) * ry) / rows;
+          body += `<line x1='${F(x)}' y1='${F(ly)}' x2='${F(x + bw)}' y2='${F(ly)}' stroke='${pal[0]}' stroke-width='0.2' opacity='0.35'/>`;
+        }
+        // lit edge facing the sun
+        body += `<rect x='${F(x)}' y='${F(top)}' width='0.6' height='${F(horizon - top + 4)}' fill='${pal[4]}' opacity='${F(0.2 + depth * 0.3)}'/>`;
+      }
+      // long ground reflection of the light
+      body += `<ellipse cx='${F(vpx)}' cy='${F(horizon + (100 - horizon) * 0.4)}' rx='${F(30)}' ry='${F(8)}' fill='${pal[4]}' opacity='0.08'/>`;
+    }
+
+    // shared: volumetric light wash + vignette + grain
+    body += `<rect width='100' height='100' fill='url(#sun${uid})'/>`;
+    body += `<rect width='100' height='100' fill='url(#vig${uid})'/>`;
+
+    return (
+`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='xMidYMid slice' width='${w}' height='${h}'>
+<defs>${defs}</defs>
+${body}
+</svg>`
+    );
+  }
+
+  function resolvePlaceholder(el) {
+    // data-ph="seed|variant"
+    const key = el.getAttribute('data-ph');
+    if (!key) return;
+    const [seed, variant] = key.split('|');
+    const w = 20, h = 20; // tiny intrinsic; CSS scales it — crisp because vector
+    const svg = svgFor(seed || 'x', variant || 'a', w, h);
+    el.style.backgroundImage = "url(\"data:image/svg+xml;utf8," + encodeURIComponent(svg) + "\")";
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+    el.classList.add('ph--ready');
+  }
+
+  // Lazy-generate placeholders as they approach viewport
+  const phObserver = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries, obs) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) { resolvePlaceholder(e.target); obs.unobserve(e.target); }
+        });
+      }, { rootMargin: '300px 0px' })
+    : null;
+
+  function initPlaceholders() {
+    document.querySelectorAll('.ph').forEach((el) => {
+      // Eager for the hero / above-the-fold; lazy for the rest
+      if (el.hasAttribute('data-eager') || !phObserver) resolvePlaceholder(el);
+      else phObserver.observe(el);
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 2. REVEAL + SCROLL MOTION
+   * ------------------------------------------------------------------ */
+  function initReveal() {
+    const items = Array.from(document.querySelectorAll('[data-reveal], [data-clip], .line'));
+    if (REDUCED || !('IntersectionObserver' in window)) {
+      items.forEach((el) => el.classList.add('is-in'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0 });
+    items.forEach((el) => io.observe(el));
+
+    // Resilience: if anything hasn't revealed after being scrolled past
+    // (e.g. observer edge-cases with absolutely-positioned/clipped frames),
+    // force-reveal on scroll once its top passes 85% of the viewport.
+    function sweep() {
+      const h = window.innerHeight;
+      for (let i = items.length - 1; i >= 0; i--) {
+        const el = items[i];
+        if (el.classList.contains('is-in')) { items.splice(i, 1); continue; }
+        const r = el.getBoundingClientRect();
+        if (r.top < h * 0.9 && r.bottom > 0) el.classList.add('is-in');
+      }
+      if (!items.length) window.removeEventListener('scroll', onScroll);
+    }
+    let ticking = false;
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; sweep(); }); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    // Initial sweep after layout settles (covers above-the-fold clipped frames)
+    requestAnimationFrame(() => requestAnimationFrame(sweep));
+    setTimeout(sweep, 400);
+  }
+
+  // rAF-driven parallax — depth without scroll hijacking
+  function initParallax() {
+    if (REDUCED) return;
+    const layers = Array.from(document.querySelectorAll('[data-parallax]'));
+    if (!layers.length) return;
+    let ticking = false;
+    const vh = () => window.innerHeight;
+
+    function update() {
+      ticking = false;
+      const center = window.scrollY + vh() / 2;
+      for (const el of layers) {
+        const rect = el.getBoundingClientRect();
+        const mid = window.scrollY + rect.top + rect.height / 2;
+        const speed = parseFloat(el.getAttribute('data-parallax')) || 0.12;
+        const delta = (center - mid) * speed;
+        el.style.transform = 'translate3d(0,' + delta.toFixed(2) + 'px,0)';
+      }
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  }
+
+  // Hero: cinematic forward-drift on scroll — the image scales & darkens as
+  // you "enter" the space; the headline drifts up and fades; the technical
+  // strip and scroll hint fade out. Normal scroll, no hijack.
+  function initHeroDrift() {
+    if (REDUCED) return;
+    const media = document.querySelector('[data-hero-media]');
+    const title = document.querySelector('[data-hero-title]');
+    const fades = Array.from(document.querySelectorAll('[data-hero-fade]'));
+    if (!media) return;
+    let ticking = false;
+    function update() {
+      ticking = false;
+      const y = window.scrollY;
+      const vh = window.innerHeight || 800;
+      const p = Math.min(1, y / vh);
+      // ease the progress for a filmic feel
+      const e = p * p * (3 - 2 * p);
+      media.style.transform = 'translate3d(0,' + (y * 0.28).toFixed(1) + 'px,0) scale(' + (1 + e * 0.16).toFixed(3) + ')';
+      media.style.filter = 'saturate(' + (0.9 - e * 0.15).toFixed(2) + ') contrast(1.05) brightness(' + (0.68 - e * 0.28).toFixed(2) + ')';
+      if (title) {
+        title.style.transform = 'translate3d(0,' + (y * -0.06).toFixed(1) + 'px,0)';
+        title.style.opacity = String(Math.max(0, 1 - e * 1.15));
+      }
+      const fadeOpacity = String(Math.max(0, 1 - p * 2.2));
+      for (const f of fades) f.style.opacity = fadeOpacity;
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+  }
+
+  // Featured scenes: each project image scales subtly as it travels through
+  // the viewport (spatial "moving through the work"). GPU transform only.
+  function initScenes() {
+    if (REDUCED) return;
+    const imgs = Array.from(document.querySelectorAll('[data-scene-media]'));
+    if (!imgs.length) return;
+    let ticking = false;
+    const vh = () => window.innerHeight || 800;
+    function update() {
+      ticking = false;
+      const h = vh();
+      for (const el of imgs) {
+        const r = el.getBoundingClientRect();
+        if (r.bottom < -200 || r.top > h + 200) continue;
+        // progress: -1 (entering below) → 0 (centered) → 1 (leaving above)
+        const center = r.top + r.height / 2;
+        const prog = (center - h / 2) / h; // ~ -0.8..0.8
+        const scale = 1.06 + Math.max(0, 0.06 - Math.abs(prog) * 0.06);
+        const shift = (prog * -3).toFixed(2);
+        const inner = el.querySelector('.ph, img');
+        if (inner) inner.style.transform = 'translate3d(0,' + shift + '%,0) scale(' + scale.toFixed(3) + ')';
+      }
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  }
+
+  /* ------------------------------------------------------------------ *
+   * SIGNATURE INTERACTION — pinned horizontal index
+   * The section is tall; an inner sticky viewport pins while the track
+   * pans horizontally in proportion to vertical scroll progress. Below
+   * the desktop breakpoint (or reduced-motion) it falls back to a native
+   * horizontal scroll-snap strip — no pin, fully usable by touch.
+   * ------------------------------------------------------------------ */
+  function initIndex() {
+    const section = document.querySelector('[data-index]');
+    const track = document.querySelector('[data-index-track]');
+    const bar = document.querySelector('[data-index-bar]');
+    if (!section || !track) return;
+
+    const mq = window.matchMedia('(min-width: 900px)');
+    let enabled = false;
+    let travel = 0;
+
+    function measure() {
+      // total horizontal overflow to pan through
+      travel = Math.max(0, track.scrollWidth - track.clientWidth);
+      // Set the section height so the pin lasts long enough to pan fully.
+      // Height = one viewport (the pinned frame) + the horizontal travel.
+      if (enabled) {
+        section.style.height = (window.innerHeight + travel) + 'px';
+      } else {
+        section.style.height = '';
+      }
+    }
+
+    let ticking = false;
+    function update() {
+      ticking = false;
+      if (!enabled) { track.style.transform = ''; return; }
+      const rect = section.getBoundingClientRect();
+      const total = rect.height - window.innerHeight;
+      // progress 0..1 while the section is pinned
+      const p = Math.min(1, Math.max(0, -rect.top / (total || 1)));
+      const x = -(p * travel);
+      track.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
+      if (bar) bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+
+    function setMode() {
+      enabled = mq.matches && !REDUCED;
+      section.classList.toggle('is-pinned', enabled);
+      track.style.transform = '';
+      measure();
+      update();
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', () => { measure(); update(); }, { passive: true });
+    if (mq.addEventListener) mq.addEventListener('change', setMode);
+    // Re-measure once placeholders/fonts settle
+    setTimeout(() => { measure(); update(); }, 500);
+    setMode();
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 3. NAVIGATION
+   * ------------------------------------------------------------------ */
+  function initNav() {
+    const nav = document.querySelector('[data-nav]');
+    if (nav && !REDUCED) {
+      let last = 0;
+      window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        if (y > last && y > 240) nav.classList.add('is-hidden');
+        else nav.classList.remove('is-hidden');
+        last = y;
+      }, { passive: true });
+    }
+    const toggle = document.querySelector('[data-mnav-toggle]');
+    const mnav = document.querySelector('[data-mnav]');
+    if (toggle && mnav) {
+      toggle.addEventListener('click', () => {
+        const open = document.body.classList.toggle('mnav-open');
+        mnav.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+        document.documentElement.style.overflow = open ? 'hidden' : '';
+      });
+      mnav.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => {
+        document.body.classList.remove('mnav-open');
+        mnav.classList.remove('is-open');
+        document.documentElement.style.overflow = '';
+      }));
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 4. WORK FILTERING
+   * ------------------------------------------------------------------ */
+  function initFilters() {
+    const bar = document.querySelector('[data-filters]');
+    const grid = document.querySelector('[data-grid]');
+    if (!bar || !grid) return;
+    const cards = Array.from(grid.querySelectorAll('.card'));
+
+    function apply(discipline, track) {
+      cards.forEach((c) => {
+        const okD = discipline === 'all' || c.dataset.discipline === discipline;
+        const okT = track === 'all' || c.dataset.track === track;
+        c.classList.toggle('is-filtered', !(okD && okT));
+      });
+    }
+
+    bar.querySelectorAll('button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.filterType; // 'discipline' | 'track'
+        // deactivate siblings of same group
+        bar.querySelectorAll('button[data-filter-type="' + type + '"]').forEach((b) => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        const d = bar.querySelector('button[data-filter-type="discipline"].is-active')?.dataset.filterValue || 'all';
+        const t = bar.querySelector('button[data-filter-type="track"].is-active')?.dataset.filterValue || 'all';
+        apply(d, t);
+        const url = new URL(location.href);
+        d === 'all' ? url.searchParams.delete('discipline') : url.searchParams.set('discipline', d);
+        t === 'all' ? url.searchParams.delete('track') : url.searchParams.set('track', t);
+        history.replaceState(null, '', url);
+      });
+    });
+
+    // Apply initial state from URL
+    const p = new URLSearchParams(location.search);
+    const d0 = p.get('discipline') || 'all';
+    const t0 = p.get('track') || 'all';
+    bar.querySelectorAll('button').forEach((b) => {
+      if (b.dataset.filterType === 'discipline') b.classList.toggle('is-active', b.dataset.filterValue === d0);
+      if (b.dataset.filterType === 'track') b.classList.toggle('is-active', b.dataset.filterValue === t0);
+    });
+    apply(d0, t0);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 5. LIGHTBOX
+   * ------------------------------------------------------------------ */
+  function initLightbox() {
+    const items = document.querySelectorAll('[data-lightbox]');
+    if (!items.length) return;
+    const box = document.createElement('div');
+    box.className = 'lightbox';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.innerHTML = '<button class="lightbox__close" aria-label="Close">Close ✕</button><div class="lightbox__stage"></div>';
+    document.body.appendChild(box);
+    const stage = box.querySelector('.lightbox__stage');
+    const close = () => { box.classList.remove('is-open'); document.documentElement.style.overflow = ''; stage.innerHTML = ''; };
+
+    items.forEach((it) => {
+      it.addEventListener('click', () => {
+        const ph = it.getAttribute('data-ph');
+        const div = document.createElement('div');
+        div.className = 'ph';
+        div.style.width = 'min(90vw, 1400px)';
+        div.style.aspectRatio = it.getAttribute('data-ratio') || '3 / 2';
+        div.setAttribute('data-ph', ph);
+        stage.innerHTML = '';
+        stage.appendChild(div);
+        resolvePlaceholder(div);
+        box.classList.add('is-open');
+        document.documentElement.style.overflow = 'hidden';
+      });
+    });
+    box.addEventListener('click', (e) => { if (e.target === box || e.target.classList.contains('lightbox__close')) close(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * BACK TO TOP — smooth (respects reduced-motion)
+   * ------------------------------------------------------------------ */
+  function initBackToTop() {
+    const link = document.querySelector('[data-backtotop]');
+    if (!link) return;
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  function boot() {
+    initPlaceholders();
+    initReveal();
+    initParallax();
+    initHeroDrift();
+    initScenes();
+    initIndex();
+    initNav();
+    initFilters();
+    initLightbox();
+    initBackToTop();
+    document.documentElement.classList.add('js-ready');
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
