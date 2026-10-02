@@ -156,7 +156,8 @@ app.get('/work', (c) => {
       <section class="phead" aria-label="Work index">
         <div class="wrap">
           <p class="marker" data-reveal>
-            <span class="idx">—</span> Portfolio · <span data-results-count role="status" aria-live="polite" aria-atomic="true">{projects.length} projects</span>
+            <span class="idx">—</span>
+            <span>Portfolio · <span data-results-count role="status" aria-live="polite" aria-atomic="true">{projects.length} projects</span></span>
           </p>
           <h1 class="display" data-reveal data-reveal-delay="1" style="margin-top:var(--sp-3)">
             Work
