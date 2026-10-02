@@ -833,7 +833,13 @@ ul { list-style: none; padding: 0; }
 
 /* Next / prev — moving to the next space */
 .pnav { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-top: 1px solid var(--line); }
-.pnav a { background: var(--surface-0); padding: clamp(2.4rem,1.5rem+4vw,5rem) var(--gut); transition: background 0.5s var(--ease); position: relative; overflow: hidden; }
+.pnav a {
+  background: var(--surface-0);
+  padding: clamp(2.4rem, 1.5rem + 4vw, 5rem) var(--gut);
+  transition: background 0.5s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
 .pnav a:hover { background: var(--surface-1); }
 .pnav .dir { color: var(--text-lo); font-size: var(--step--2); letter-spacing: 0.24em; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; }
 .pnav .dir .arrow { transition: transform 0.4s var(--ease); }
@@ -860,7 +866,15 @@ ul { list-style: none; padding: 0; }
 }
 .lightbox.is-open { opacity: 1; visibility: visible; }
 .lightbox img, .lightbox .ph { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 3px; }
-.lightbox__close { position: absolute; top: clamp(1rem,0.5rem+2vw,2rem); right: clamp(1rem,0.5rem+2vw,2rem); font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-mid); }
+.lightbox__close {
+  position: absolute;
+  top: clamp(1rem, 0.5rem + 2vw, 2rem);
+  right: clamp(1rem, 0.5rem + 2vw, 2rem);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
 
 /* ==========================================================================
    ABOUT — editorial composition (not a resume)
