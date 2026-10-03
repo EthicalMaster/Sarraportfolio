@@ -34,7 +34,7 @@ app.get('/', (c) => {
             <video
               class="hero__video-el"
               data-hero-video
-              src="/videos/architectural_hero.mp4"
+              src="/videos/architectural_hero_scrub.mp4"
               muted
               playsinline
               preload="auto"
@@ -50,7 +50,6 @@ app.get('/', (c) => {
 
           {/* Technical strip — coordinate / index line across the top of the frame */}
           <div class="hero__strip" data-hero-fade aria-hidden="true">
-            <span>{site.tagline}</span>
             <span>{site.location} · 55.6761°N</span>
             <span>Portfolio — {site.year}</span>
           </div>

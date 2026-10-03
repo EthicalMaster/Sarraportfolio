@@ -361,19 +361,15 @@ ul { list-style: none; padding: 0; }
   content: ""; position: absolute; left: var(--gut); right: var(--gut); top: -1rem;
   height: 1px; background: var(--line);
 }
-.hero__strip span:nth-child(2) { color: var(--text-lo); text-align: center; }
-.hero__strip span:nth-child(3) { text-align: right; white-space: nowrap; }
+.hero__strip span:first-child { color: var(--text-lo); text-align: left; }
+.hero__strip span:last-child { text-align: right; white-space: nowrap; }
 @media (max-width: 680px) {
-  /* On small screens the coordinate line + portfolio index share one clean
-     row; the disciplines tagline (already shown in the nav) is dropped from
-     the strip so the two systems never duplicate or collide. */
+  /* Keep location and portfolio metadata on a clean, wrapping row. */
   .hero__strip {
     top: clamp(5.2rem, 3.4rem + 9vw, 7rem);
     font-size: var(--step--2); letter-spacing: 0.1em; gap: 0.75rem;
     flex-wrap: wrap;
   }
-  .hero__strip span:nth-child(1) { display: none; }
-  .hero__strip span:nth-child(2) { text-align: left; }
 }
 
 .hero__inner {
@@ -1132,4 +1128,11 @@ ul { list-style: none; padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   .mnav, .nav__toggle span { transition: none; }
   .mnav.is-open a { animation: none; opacity: 1; transform: none; }
+}
+
+/* A static hero needs no extra scroll runway. */
+.hero-video-wrap--static { height: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-video-wrap { height: auto; }
+  .hero__media { transition: none; }
 }

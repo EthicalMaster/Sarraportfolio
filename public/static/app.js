@@ -313,75 +313,83 @@ ${body}
    * Does NOT affect any other scroll interaction on the page.
    * ------------------------------------------------------------------ */
   function initHeroVideo() {
-    var video = document.querySelector('[data-hero-video]');
-    var wrap = document.querySelector('[data-hero-video-wrap]');
-    var hero = wrap ? wrap.querySelector('.hero') : null;
-    if (!video || !wrap) return;
+    const video = document.querySelector('[data-hero-video]');
+    const wrap = document.querySelector('[data-hero-video-wrap]');
+    const hero = wrap ? wrap.querySelector('.hero') : null;
+    if (!video || !wrap || !hero) return;
 
-    // Enforce paused state so video never autoplays normally
     video.pause();
     video.muted = true;
+    let ready = false;
+    let target = 0;
+    let frame = 0;
+    let lastTick = 0;
+    // Match the 24 fps source; avoid requesting invisible sub-frame seeks.
+    const frameDuration = 1 / 24;
+    const settleThreshold = frameDuration / 4;
 
-    var duration = 0;
-    var ready = false;
-    var desiredTime = 0;
-    var ticking = false;
-
-    function applyTime() {
-      if (!ready || duration <= 0) return;
-      if (!video.seeking) {
-        if (Math.abs(desiredTime - video.currentTime) > 0.015) {
-          video.currentTime = desiredTime;
-        }
+    function schedule() {
+      if (!frame && ready && !REDUCED && !document.hidden) {
+        frame = requestAnimationFrame(tick);
       }
     }
 
-    video.addEventListener('seeked', function () {
-      if (Math.abs(desiredTime - video.currentTime) > 0.02) {
-        video.currentTime = desiredTime;
-      }
-    });
+    function measure() {
+      if (!ready || REDUCED) return;
+      const rect = wrap.getBoundingClientRect();
+      const range = Math.max(1, rect.height - hero.offsetHeight);
+      const progress = Math.min(1, Math.max(0, -rect.top / range));
+      target = progress * Math.max(0, video.duration - frameDuration);
+      schedule();
+    }
 
+    function tick(now) {
+      frame = 0;
+      // Wait for the decoder before requesting another frame. Never queue
+      // competing seeks, including when the user reverses direction.
+      if (video.seeking) return;
+      const delta = target - video.currentTime;
+      if (Math.abs(delta) <= settleThreshold) {
+        lastTick = 0;
+        return;
+      }
+      const dt = lastTick ? Math.min(64, now - lastTick) : 1000 / 60;
+      lastTick = now;
+      // Time-based easing turns discrete wheel steps into a short glide.
+      // It keeps settling after scrolling stops and works in both directions.
+      const next = Math.abs(delta) < frameDuration
+        ? target
+        : video.currentTime + delta * (1 - Math.exp(-dt / 110));
+      video.currentTime = next;
+    }
+
+    video.addEventListener('seeked', schedule);
     function markReady() {
-      duration = video.duration || 0;
-      if (duration > 0 && !ready) {
-        ready = true;
-        hero && hero.classList.add('hero--video-ready');
-        update();
-      }
-    }
-
-    if (video.readyState >= 1 && video.duration) {
-      markReady();
-    } else {
-      video.addEventListener('loadedmetadata', markReady);
+      // Metadata alone does not mean a frame is available to display.
+      if (ready || video.readyState < 2 || !Number.isFinite(video.duration) || video.duration <= 0) return;
+      ready = true;
+      hero.classList.add('hero--video-ready');
+      measure();
     }
     video.addEventListener('loadeddata', markReady);
     video.addEventListener('canplay', markReady);
-
-    function update() {
-      ticking = false;
-      if (!ready) return;
-      var rect = wrap.getBoundingClientRect();
-      var wrapH = rect.height;
-      var vh = window.innerHeight || 800;
-      var total = wrapH - vh;
-      if (total <= 0) return;
-
-      var scrolled = Math.max(0, -rect.top);
-      var progress = Math.min(1, Math.max(0, scrolled / total));
-
-      // Map progress to video timeline (clamp to prevent triggering 'ended' at 100%)
-      desiredTime = Math.max(0, Math.min(duration - 0.04, progress * duration));
-      applyTime();
-    }
-
-    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-
-    // Initial check
-    setTimeout(update, 200);
+    video.addEventListener('error', () => {
+      ready = false;
+      cancelAnimationFrame(frame);
+      frame = 0;
+      hero.classList.remove('hero--video-ready');
+      wrap.classList.add('hero-video-wrap--static');
+    });
+    window.addEventListener('scroll', measure, { passive: true });
+    window.addEventListener('resize', measure, { passive: true });
+    window.addEventListener('pageshow', measure);
+    document.addEventListener('visibilitychange', () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      lastTick = 0;
+      if (!document.hidden) measure();
+    });
+    markReady();
   }
 
   // Featured scenes: each project image scales subtly as it travels through
