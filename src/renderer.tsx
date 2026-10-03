@@ -26,6 +26,9 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={desc} />
         <meta property="og:type" content="website" />
+        {/* Tiny fail-open bootstrap: never leave the site behind a failed loader. */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var r=document.documentElement;try{if(location.pathname!=='/'&&sessionStorage.getItem('sarra-entered'))return;}catch(e){}r.classList.add('is-loading');window.setTimeout(function(){if(!r.classList.contains('is-loading'))return;window.dispatchEvent(new Event('portfolio:skip'));r.classList.remove('is-loading');document.querySelectorAll('[data-loader-inert]').forEach(function(e){e.inert=false;});window.dispatchEvent(new Event('portfolio:entered'));},8000);})();` }} />
+        <style dangerouslySetInnerHTML={{ __html: `.arrival{display:none}html.is-loading{overflow:hidden}html.is-loading .arrival{display:flex;position:fixed;inset:0;z-index:10000;background:#141312;color:#f4f1ec}html:not(.js-ready) .hero-video-wrap{height:auto}` }} />
         {/* Fonts: preconnect + display=swap keeps first paint fast */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
@@ -38,9 +41,25 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
           rel="icon"
           href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23141312'/%3E%3Ctext x='16' y='23' font-family='serif' font-size='20' fill='%23c8a97e' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E"
         />
+        <script defer src="/static/arrival.js"></script>
         <script defer src="/static/app.js"></script>
       </head>
       <body id="top">
+        <div class="arrival" data-arrival role="dialog" aria-modal="true" aria-label="Preparing portfolio" aria-describedby="arrival-status">
+          <div class="arrival__top"><span class="arrival__brand">{site.name}</span><span class="arrival__edition">Portfolio — {site.year}</span></div>
+          <div class="arrival__center">
+            <div class="arrival__drawing" aria-hidden="true">
+              <svg viewBox="0 0 320 200" fill="none"><path class="arrival__guide" d="M20 170H300M45 20V185M275 20V185M20 40H300" /><path class="arrival__outline" pathLength="100" d="M60 165V70L160 25L260 70V165L160 195L60 165M60 70L160 110L260 70M160 110V195M160 25V110M60 115L160 155L260 115" /></svg>
+            </div>
+            <p class="arrival__eyebrow">Space · Light · Material</p>
+            <p class="arrival__title">A space taking shape.</p>
+          </div>
+          <div class="arrival__bottom">
+            <div class="arrival__readout"><p id="arrival-status" data-arrival-status role="status">Preparing your visit</p><span class="arrival__number" aria-hidden="true"><span data-arrival-number>0</span><small>%</small></span></div>
+            <div class="arrival__track" data-arrival-progress role="progressbar" aria-label="Portfolio preparation" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+            <div class="arrival__meta"><span>Architecture · Interior · Visualization</span><button type="button" data-arrival-skip>Enter now <span aria-hidden="true">↗</span></button></div>
+          </div>
+        </div>
         <SiteNav />
         <MobileNav />
         <main id="content">{children}</main>

@@ -366,11 +366,13 @@ ${body}
     video.addEventListener('seeked', schedule);
     function markReady() {
       // Metadata alone does not mean a frame is available to display.
-      if (ready || video.readyState < 2 || !Number.isFinite(video.duration) || video.duration <= 0) return;
+      if (ready || video.dataset.prepared !== 'true' || video.readyState < 2 || !Number.isFinite(video.duration) || video.duration <= 0) return;
       ready = true;
       hero.classList.add('hero--video-ready');
+      wrap.classList.remove('hero-video-wrap--static');
       measure();
     }
+    video.addEventListener('portfolio:video-ready', markReady);
     video.addEventListener('loadeddata', markReady);
     video.addEventListener('canplay', markReady);
     video.addEventListener('error', () => {
@@ -695,7 +697,9 @@ ${body}
   /* ------------------------------------------------------------------ */
   function boot() {
     initPlaceholders();
-    initReveal();
+    if (document.documentElement.classList.contains('is-loading')) {
+      window.addEventListener('portfolio:entered', initReveal, { once: true });
+    } else initReveal();
     initParallax();
     initHeroDrift();
     initHeroVideo();
@@ -706,6 +710,7 @@ ${body}
     initLightbox();
     initBackToTop();
     document.documentElement.classList.add('js-ready');
+    window.dispatchEvent(new Event('portfolio:app-ready'));
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

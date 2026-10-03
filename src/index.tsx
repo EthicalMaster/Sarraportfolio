@@ -27,24 +27,25 @@ app.get('/', (c) => {
       {/* HERO — scroll-scrubbed architectural video experience.
           The wrapper provides vertical scroll distance for the video timeline.
           The hero pins (sticky) inside the wrapper while the video scrubs. */}
-      <div class="hero-video-wrap" data-hero-video-wrap>
+      <div class="hero-video-wrap hero-video-wrap--static" data-hero-video-wrap>
         <section class="hero" aria-label="Introduction">
           {/* Scroll-scrubbed video — the primary hero visual */}
           <div class="hero__video" data-hero-video-container>
             <video
               class="hero__video-el"
               data-hero-video
-              src="/videos/architectural_hero_scrub.mp4"
+              data-src="/videos/architectural_hero_scrub.mp4"
+              poster="/videos/architectural_hero_poster.jpg"
               muted
               playsinline
-              preload="auto"
+              preload="none"
               aria-hidden="true"
             ></video>
           </div>
 
           {/* Original placeholder image — fallback while video loads */}
           <div class="hero__media" data-hero-media>
-            <Ph src="/img/hero/cover" alt="Architectural interior with raking daylight" eager ratio="16 / 9" />
+            <img src="/videos/architectural_hero_poster.jpg" alt="Architectural site at sunset" width="1280" height="720" fetchpriority="high" decoding="async" />
           </div>
           <div class="hero__scrim" aria-hidden="true"></div>
 
