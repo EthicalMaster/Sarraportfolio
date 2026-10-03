@@ -73,7 +73,7 @@ app.get('/', (c) => {
           </p>
           <div class="statement__grid">
             <p class="statement__lead" data-reveal data-reveal-delay="1">
-              Buildings that are quiet,<br />but precise.
+              Buildings that are quiet, but precise.
             </p>
             <div class="statement__body" data-reveal data-reveal-delay="2">
               <p>
