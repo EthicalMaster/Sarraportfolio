@@ -27,3 +27,7 @@ Batch 3 validation: production build and JS syntax passed; eight server-rendered
 *Requires supplied or verified identity/content/assets; do not invent biographical facts, project history or contact destinations.
 
 This is a planning estimate grouped from the audit, not a guarantee that undiscovered problems will fit the same count. Responsive review may identify additional corrections. Preserve the existing visual identity and avoid unrelated feature additions.
+
+## Visual correction after batch 5
+
+User screenshots revealed hero/header overlap on a wide, short viewport and inconsistent shortcut styling. Reserve hero top clearance, cap display type by viewport height, and reuse the existing scene CTA typography, neutral divider and hover treatment. Keep the brand subtitle compact. This correction does not advance the remaining pair count.

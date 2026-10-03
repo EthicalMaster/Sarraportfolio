@@ -55,7 +55,7 @@ app.get('/', (c) => {
                 <span>light.</span>
               </span>
             </h1>
-            <a class="hero__work-link" href="/work">Explore projects <span aria-hidden="true">↗</span></a>
+            <a class="scene__cta hero__work-link" href="/work">Explore projects <span class="arrow" aria-hidden="true">→</span></a>
           </div>
           
         </div>
@@ -100,7 +100,7 @@ app.get('/', (c) => {
             <p class="marker"><span class="idx">—</span> The full index</p>
             <div class="index__actions">
               <p class="index__hint mono" aria-hidden="true">Scroll →</p>
-              <a class="index__skip" href="#selected-work">Skip to selected work <span aria-hidden="true">↓</span></a>
+              <a class="scene__cta index__skip" href="#selected-work">Selected work <span class="arrow" aria-hidden="true">↓</span></a>
             </div>
           </div>
           <div class="index__track" data-index-track>

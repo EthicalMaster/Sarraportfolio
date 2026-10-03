@@ -188,8 +188,8 @@ ul { list-style: none; padding: 0; }
 .nav__brand small {
   display: block;
   font-family: var(--font-sans);
-  font-size: var(--step--2);
-  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
   line-height: 1.5;
   text-transform: uppercase;
   opacity: 0.7;
@@ -352,7 +352,9 @@ ul { list-style: none; padding: 0; }
   width: 100%;
   max-width: var(--maxw);
   margin-inline: auto;
-  padding: 0 var(--gut) clamp(3rem, 1.5rem + 5vw, 6.5rem);
+  /* Keep the title below the fixed brand and coordinate strip, even on
+     wide, short screens. Allow the hero to grow when text needs more room. */
+  padding: clamp(12rem, 9rem + 5vw, 16rem) var(--gut) clamp(3rem, 1.5rem + 5vw, 6.5rem);
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: end;
@@ -366,7 +368,7 @@ ul { list-style: none; padding: 0; }
   margin-bottom: clamp(1rem, 0.6rem + 1.5vw, 2rem);
 }
 .hero__title {
-  font-size: clamp(2.9rem, 0.6rem + 10.5vw, 12rem);
+  font-size: clamp(2.9rem, min(0.6rem + 10.5vw, 17svh), 12rem);
   line-height: 0.9;
   letter-spacing: -0.025em;
   color: var(--text-hi);
@@ -374,13 +376,7 @@ ul { list-style: none; padding: 0; }
 }
 .hero__title .line { display: block; overflow: hidden; padding-block: 0.08em 0.14em; margin-block: -0.08em -0.14em; }
 .hero__title .line > span { display: block; }
-.hero__work-link {
-  display: inline-flex; align-items: center; gap: 0.8rem;
-  margin-top: 1.6rem; padding-block: 0.6rem;
-  border-bottom: 1px solid var(--accent);
-  font-size: var(--step--1); letter-spacing: 0.12em; text-transform: uppercase;
-}
-.hero__work-link:hover { color: var(--accent); }
+.hero__work-link { margin-top: var(--sp-2); }
 .hero__accent > span { font-style: italic; color: var(--accent); }
 .hero__disc {
   display: flex;
@@ -631,8 +627,7 @@ ul { list-style: none; padding: 0; }
 }
 .index__head { flex-wrap: wrap; }
 .index__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem 1.5rem; }
-.index__skip { font-size: var(--step--1); padding-block: 0.5rem; text-decoration: underline; text-underline-offset: 0.25em; }
-.index__skip:hover { color: var(--accent); }
+.index__actions .index__skip { margin-top: 0; font-size: var(--step--2); color: var(--text-mid); }
 #selected-work { scroll-margin-top: 6rem; }
 .index__head .marker { min-width: 0; flex: 1 1 auto; }
 .index__hint { color: var(--text-lo); flex: 0 0 auto; white-space: nowrap; }
