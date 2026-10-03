@@ -55,6 +55,7 @@ app.get('/', (c) => {
                 <span>light.</span>
               </span>
             </h1>
+            <a class="hero__work-link" href="/work">Explore projects <span aria-hidden="true">↗</span></a>
           </div>
           
         </div>
@@ -97,7 +98,10 @@ app.get('/', (c) => {
         <div class="index__sticky">
           <div class="wrap index__head">
             <p class="marker"><span class="idx">—</span> The full index</p>
-            <p class="index__hint mono" aria-hidden="true">Scroll →</p>
+            <div class="index__actions">
+              <p class="index__hint mono" aria-hidden="true">Scroll →</p>
+              <a class="index__skip" href="#selected-work">Skip to selected work <span aria-hidden="true">↓</span></a>
+            </div>
           </div>
           <div class="index__track" data-index-track>
             {allProjects().map((p: Project, i: number) => (
@@ -118,7 +122,7 @@ app.get('/', (c) => {
       </section>
 
       {/* FEATURED WORK — the heart: a cinematic scroll sequence */}
-      <section class="work" aria-label="Selected work" data-seq>
+      <section class="work" id="selected-work" tabindex="-1" aria-label="Selected work" data-seq>
         <div class="wrap">
           <div class="work__head">
             <p class="marker" data-reveal>

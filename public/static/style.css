@@ -374,6 +374,13 @@ ul { list-style: none; padding: 0; }
 }
 .hero__title .line { display: block; overflow: hidden; padding-block: 0.08em 0.14em; margin-block: -0.08em -0.14em; }
 .hero__title .line > span { display: block; }
+.hero__work-link {
+  display: inline-flex; align-items: center; gap: 0.8rem;
+  margin-top: 1.6rem; padding-block: 0.6rem;
+  border-bottom: 1px solid var(--accent);
+  font-size: var(--step--1); letter-spacing: 0.12em; text-transform: uppercase;
+}
+.hero__work-link:hover { color: var(--accent); }
 .hero__accent > span { font-style: italic; color: var(--accent); }
 .hero__disc {
   display: flex;
@@ -610,6 +617,8 @@ ul { list-style: none; padding: 0; }
   position: sticky;
   top: 0;
   height: 100vh;
+  gap: clamp(1rem, 2vh, 2rem);
+  padding-block: clamp(1.5rem, 4vh, 3rem);
 }
 /* Head row — "THE FULL INDEX" (left) and "SCROLL →" (right). It sits inside
    .wrap, so it inherits the page gutter and max-width; the extra flex sizing
@@ -620,6 +629,11 @@ ul { list-style: none; padding: 0; }
   gap: clamp(1rem, 0.5rem + 2vw, 3rem);
   padding-block: clamp(0.5rem, 0.25rem + 1vw, 1.5rem);
 }
+.index__head { flex-wrap: wrap; }
+.index__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem 1.5rem; }
+.index__skip { font-size: var(--step--1); padding-block: 0.5rem; text-decoration: underline; text-underline-offset: 0.25em; }
+.index__skip:hover { color: var(--accent); }
+#selected-work { scroll-margin-top: 6rem; }
 .index__head .marker { min-width: 0; flex: 1 1 auto; }
 .index__hint { color: var(--text-lo); flex: 0 0 auto; white-space: nowrap; }
 .index.is-pinned .index__hint { color: var(--accent); }
@@ -637,18 +651,21 @@ ul { list-style: none; padding: 0; }
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 1rem;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--ink);
+  scroll-padding-inline: var(--gut);
 }
-.index:not(.is-pinned) .index__track::-webkit-scrollbar { display: none; }
+
 
 .index__item {
   flex: 0 0 auto;
-  width: clamp(240px, 60vw, 30vw);
+  width: clamp(240px, 75vw, 400px);
   scroll-snap-align: start;
   display: grid;
   gap: var(--sp-2);
 }
 @media (min-width: 900px) { .index__item { width: clamp(300px, 26vw, 34vw); } }
+.index.is-pinned .index__item { width: max(240px, min(26vw, 40vh)); }
 
 .index__media {
   position: relative;
@@ -669,9 +686,11 @@ ul { list-style: none; padding: 0; }
   position: absolute; top: 0.9rem; left: 0.9rem;
   color: var(--text-hi); mix-blend-mode: difference;
 }
-.index__meta { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
-.index__name { font-family: var(--font-display); font-weight: 300; font-size: var(--step-1); color: var(--text-hi); }
-.index__cat { color: var(--text-lo); }
+.index__meta { display: grid; align-content: start; gap: 0.4rem; min-width: 0; }
+.index__name { font-family: var(--font-display); font-weight: 300; font-size: var(--step-1); line-height: 1.2; overflow-wrap: break-word; color: var(--text-hi); }
+.index__cat { color: var(--text-lo); line-height: 1.5; overflow-wrap: break-word; }
+.index__item:focus-visible { outline-offset: -2px; }
+.index__track { align-items: start; }
 
 .index__progress {
   height: 1px; background: var(--line);

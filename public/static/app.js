@@ -343,17 +343,17 @@ ${body}
     const bar = document.querySelector('[data-index-bar]');
     if (!section || !track) return;
 
-    const mq = window.matchMedia('(min-width: 900px)');
+    const mq = window.matchMedia('(min-width: 900px) and (min-height: 760px)');
     let enabled = false;
     let travel = 0;
 
     function measure() {
       // total horizontal overflow to pan through
       travel = Math.max(0, track.scrollWidth - track.clientWidth);
-      // Set the section height so the pin lasts long enough to pan fully.
-      // Height = one viewport (the pinned frame) + the horizontal travel.
+      // Complete the full pan with 35% less vertical scrolling. Short
+      // viewports use the native strip so the taller captions remain visible.
       if (enabled) {
-        section.style.height = (window.innerHeight + travel) + 'px';
+        section.style.height = (window.innerHeight + travel * 0.65) + 'px';
       } else {
         section.style.height = '';
       }

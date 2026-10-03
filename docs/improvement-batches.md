@@ -8,14 +8,14 @@ Scope: address the October 2 audit areas rated 7/10 or lower in two focused corr
 2. Filter feedback and reset; keyboard-accessible image viewer.
 3. Current-section navigation; mobile menu keyboard/focus behavior.
 4. Larger shared metadata text; balanced practice-statement wrapping and heading mask clearance.
+5. Full-width index titles with category below; shorter pinned scroll, direct project link and skip-to-selected-work link. Short viewports retain native horizontal scrolling.
 
 Batch 3 validation: production build and JS syntax passed; eight server-rendered navigation cases passed; DOM checks passed for initial focus, Tab/Shift+Tab wrap, Escape restoration, link closure and filter/current-link synchronization. Phone viewport rendering remains to be verified.
 
-## Planned remaining pairs (8)
+## Planned remaining pairs (7)
 
 | Pair | First correction | Second correction |
 | --- | --- | --- |
-| 5 | Horizontal index captions | Homepage scroll pacing and direct work access |
 | 6 | Featured-project proportions | Filtered work-grid balance |
 | 7 | Project-detail hierarchy | Fixed Back to Projects placement |
 | 8 | Real image support | Authentic project content and authorship labels* |
