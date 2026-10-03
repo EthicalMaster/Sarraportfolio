@@ -1,4 +1,4 @@
-import { jsxRenderer } from 'hono/jsx-renderer'
+import { jsxRenderer, useRequestContext } from 'hono/jsx-renderer'
 import { site } from './data/site'
 
 declare module 'hono' {
@@ -50,6 +50,27 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
   )
 })
 
+const navigationLinks = [
+  { href: '/work', label: 'Work' },
+  { href: '/work?discipline=architecture', label: 'Architecture' },
+  { href: '/work?discipline=interior', label: 'Interior' },
+  { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
+]
+
+function NavigationLinks({ mobile = false }: { mobile?: boolean }) {
+  const { req } = useRequestContext()
+  const path = req.path.replace(/\/$/, '') || '/'
+  const discipline = req.query('discipline')
+  const current = path === '/work' && ['architecture', 'interior'].includes(discipline || '')
+    ? `/work?discipline=${discipline}`
+    : path.startsWith('/work/') ? '/work' : path
+  const links = mobile ? [{ href: '/', label: 'Home' }, ...navigationLinks] : navigationLinks
+  return <>{links.map(({ href, label }) => (
+    <a href={href} aria-current={href === current ? (path.startsWith('/work/') ? 'location' : 'page') : undefined}>{label}</a>
+  ))}</>
+}
+
 function SiteNav() {
   return (
     <header class="nav" data-nav>
@@ -58,13 +79,9 @@ function SiteNav() {
         <small>{site.tagline}</small>
       </a>
       <nav class="nav__links" aria-label="Primary">
-        <a href="/work">Work</a>
-        <a href="/work?discipline=architecture">Architecture</a>
-        <a href="/work?discipline=interior">Interior</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
+        <NavigationLinks />
       </nav>
-      <button class="nav__toggle" data-mnav-toggle aria-label="Menu" aria-expanded="false" aria-controls="mobile-nav">
+      <button class="nav__toggle" data-mnav-toggle type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
         <span></span>
         <span></span>
         <span></span>
@@ -75,13 +92,8 @@ function SiteNav() {
 
 function MobileNav() {
   return (
-    <nav class="mnav" id="mobile-nav" data-mnav aria-label="Mobile">
-      <a href="/">Home</a>
-      <a href="/work">Work</a>
-      <a href="/work?discipline=architecture">Architecture</a>
-      <a href="/work?discipline=interior">Interior</a>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
+    <nav class="mnav" id="mobile-nav" data-mnav aria-label="Mobile" inert>
+      <NavigationLinks mobile />
       <div class="mnav__meta">
         <span>{site.location}</span>
         <span>{site.email}</span>

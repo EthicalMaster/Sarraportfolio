@@ -175,7 +175,7 @@ ul { list-style: none; padding: 0; }
   color: #fff;
   transition: transform 0.5s var(--ease);
 }
-.nav.is-hidden { transform: translateY(-110%); }
+.nav.is-hidden:not(:focus-within) { transform: translateY(-110%); }
 .nav__brand {
   font-family: var(--font-display);
   font-size: var(--step-1);
@@ -211,8 +211,8 @@ ul { list-style: none; padding: 0; }
   transition: transform 0.45s var(--ease);
 }
 .nav__links a:hover::after,
-.nav__links a[aria-current="page"]::after { transform: scaleX(1); transform-origin: left; }
-.nav__links a[aria-current="page"] { opacity: 1; }
+.nav__links a[aria-current]::after { transform: scaleX(1); transform-origin: left; }
+.nav__links a[aria-current] { opacity: 1; }
 
 .nav__toggle { display: none; }
 
@@ -225,7 +225,7 @@ ul { list-style: none; padding: 0; }
   color: var(--text-hi);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: safe center;
   padding: clamp(6rem, 4rem + 8vw, 9rem) var(--gut) var(--gut);
   transform: translateY(-100%);
   transition: transform 0.6s var(--ease);
@@ -242,6 +242,8 @@ ul { list-style: none; padding: 0; }
   opacity: 0;
   transform: translateY(20px);
 }
+.mnav a[aria-current] { text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+.mnav.is-open a:focus-visible { animation: none; opacity: 1; transform: none; }
 .mnav.is-open a { animation: mnavIn 0.7s var(--ease) forwards; }
 .mnav.is-open a:nth-child(1) { animation-delay: 0.08s; }
 .mnav.is-open a:nth-child(2) { animation-delay: 0.14s; }
@@ -266,7 +268,7 @@ ul { list-style: none; padding: 0; }
   .nav__links { display: none; }
   .nav__toggle {
     display: flex; flex-direction: column; gap: 5px;
-    width: 30px; padding: 6px 0;
+    width: 44px; min-height: 44px; padding: 10px 7px; justify-content: center;
   }
   .nav__toggle span {
     display: block; height: 1.5px; width: 100%; background: currentColor;
@@ -1071,3 +1073,8 @@ ul { list-style: none; padding: 0; }
 /* Utility */
 .u-hide { display: none !important; }
 .divider { height: 1px; background: var(--line); border: 0; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mnav, .nav__toggle span { transition: none; }
+  .mnav.is-open a { animation: none; opacity: 1; transform: none; }
+}
