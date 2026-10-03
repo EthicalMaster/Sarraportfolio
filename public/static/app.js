@@ -273,16 +273,20 @@ ${body}
   // Hero: cinematic forward-drift on scroll — the image scales & darkens as
   // you "enter" the space; the headline drifts up and fades; the technical
   // strip and scroll hint fade out. Normal scroll, no hijack.
+  // Updated to calculate progress relative to the hero-video-wrap.
   function initHeroDrift() {
     if (REDUCED) return;
     const media = document.querySelector('[data-hero-media]');
     const title = document.querySelector('[data-hero-title]');
     const fades = Array.from(document.querySelectorAll('[data-hero-fade]'));
+    const wrap = document.querySelector('[data-hero-video-wrap]');
     if (!media) return;
     let ticking = false;
     function update() {
       ticking = false;
-      const y = window.scrollY;
+      // Use scroll position relative to the wrapper top for consistent behaviour
+      const wrapTop = wrap ? wrap.getBoundingClientRect().top : 0;
+      const y = wrap ? Math.max(0, -wrapTop) : window.scrollY;
       const vh = window.innerHeight || 800;
       const p = Math.min(1, y / vh);
       // ease the progress for a filmic feel
@@ -298,7 +302,86 @@ ${body}
     }
     function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
     update();
+  }
+
+  /* ------------------------------------------------------------------ *
+   * HERO VIDEO SCROLL-SCRUB
+   * Maps the hero wrapper's scroll range to video.currentTime.
+   * Completely isolated — only operates within [data-hero-video-wrap].
+   * Does NOT affect any other scroll interaction on the page.
+   * ------------------------------------------------------------------ */
+  function initHeroVideo() {
+    var video = document.querySelector('[data-hero-video]');
+    var wrap = document.querySelector('[data-hero-video-wrap]');
+    var hero = wrap ? wrap.querySelector('.hero') : null;
+    if (!video || !wrap) return;
+
+    // Enforce paused state so video never autoplays normally
+    video.pause();
+    video.muted = true;
+
+    var duration = 0;
+    var ready = false;
+    var desiredTime = 0;
+    var ticking = false;
+
+    function applyTime() {
+      if (!ready || duration <= 0) return;
+      if (!video.seeking) {
+        if (Math.abs(desiredTime - video.currentTime) > 0.015) {
+          video.currentTime = desiredTime;
+        }
+      }
+    }
+
+    video.addEventListener('seeked', function () {
+      if (Math.abs(desiredTime - video.currentTime) > 0.02) {
+        video.currentTime = desiredTime;
+      }
+    });
+
+    function markReady() {
+      duration = video.duration || 0;
+      if (duration > 0 && !ready) {
+        ready = true;
+        hero && hero.classList.add('hero--video-ready');
+        update();
+      }
+    }
+
+    if (video.readyState >= 1 && video.duration) {
+      markReady();
+    } else {
+      video.addEventListener('loadedmetadata', markReady);
+    }
+    video.addEventListener('loadeddata', markReady);
+    video.addEventListener('canplay', markReady);
+
+    function update() {
+      ticking = false;
+      if (!ready) return;
+      var rect = wrap.getBoundingClientRect();
+      var wrapH = rect.height;
+      var vh = window.innerHeight || 800;
+      var total = wrapH - vh;
+      if (total <= 0) return;
+
+      var scrolled = Math.max(0, -rect.top);
+      var progress = Math.min(1, Math.max(0, scrolled / total));
+
+      // Map progress to video timeline (clamp to prevent triggering 'ended' at 100%)
+      desiredTime = Math.max(0, Math.min(duration - 0.04, progress * duration));
+      applyTime();
+    }
+
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+
+    // Initial check
+    setTimeout(update, 200);
   }
 
   // Featured scenes: each project image scales subtly as it travels through
@@ -607,6 +690,7 @@ ${body}
     initReveal();
     initParallax();
     initHeroDrift();
+    initHeroVideo();
     initScenes();
     initIndex();
     initNav();

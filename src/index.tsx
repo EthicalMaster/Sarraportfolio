@@ -24,47 +24,64 @@ app.get('/', (c) => {
   const count = allProjects().length
   return c.render(
     <>
-      {/* HERO — cinematic, image-led, art-directed. Identity lives in the nav;
-          the hero communicates the practice + disciplines over a cropping image. */}
-      <section class="hero" aria-label="Introduction">
-        <div class="hero__media" data-hero-media>
-          <Ph src="/img/hero/cover" alt="Architectural interior with raking daylight" eager ratio="16 / 9" />
-        </div>
-        <div class="hero__scrim" aria-hidden="true"></div>
-
-        {/* Technical strip — coordinate / index line across the top of the frame */}
-        <div class="hero__strip" data-hero-fade aria-hidden="true">
-          <span>{site.tagline}</span>
-          <span>{site.location} · 55.6761°N</span>
-          <span>Portfolio — {site.year}</span>
-        </div>
-
-        <div class="hero__inner">
-          <div class="hero__lead" data-hero-title>
-            <p class="hero__eyebrow line" data-reveal-delay="1">
-              <span>Selected works in space, light &amp; material</span>
-            </p>
-            <h1 class="hero__title display">
-              <span class="line" data-reveal-delay="1">
-                <span>Architecture</span>
-              </span>
-              <span class="line" data-reveal-delay="2">
-                <span>as a study of</span>
-              </span>
-              <span class="line hero__accent" data-reveal-delay="3">
-                <span>light.</span>
-              </span>
-            </h1>
-            <a class="scene__cta hero__work-link" href="/work">Explore projects <span class="arrow" aria-hidden="true">→</span></a>
+      {/* HERO — scroll-scrubbed architectural video experience.
+          The wrapper provides vertical scroll distance for the video timeline.
+          The hero pins (sticky) inside the wrapper while the video scrubs. */}
+      <div class="hero-video-wrap" data-hero-video-wrap>
+        <section class="hero" aria-label="Introduction">
+          {/* Scroll-scrubbed video — the primary hero visual */}
+          <div class="hero__video" data-hero-video-container>
+            <video
+              class="hero__video-el"
+              data-hero-video
+              src="/videos/architectural_hero.mp4"
+              muted
+              playsinline
+              preload="auto"
+              aria-hidden="true"
+            ></video>
           </div>
-          
-        </div>
 
-        <div class="hero__scroll" data-hero-fade aria-hidden="true">
-          <span class="bar"></span>
-          Scroll to enter
-        </div>
-      </section>
+          {/* Original placeholder image — fallback while video loads */}
+          <div class="hero__media" data-hero-media>
+            <Ph src="/img/hero/cover" alt="Architectural interior with raking daylight" eager ratio="16 / 9" />
+          </div>
+          <div class="hero__scrim" aria-hidden="true"></div>
+
+          {/* Technical strip — coordinate / index line across the top of the frame */}
+          <div class="hero__strip" data-hero-fade aria-hidden="true">
+            <span>{site.tagline}</span>
+            <span>{site.location} · 55.6761°N</span>
+            <span>Portfolio — {site.year}</span>
+          </div>
+
+          <div class="hero__inner">
+            <div class="hero__lead" data-hero-title>
+              <p class="hero__eyebrow line" data-reveal-delay="1">
+                <span>Selected works in space, light &amp; material</span>
+              </p>
+              <h1 class="hero__title display">
+                <span class="line" data-reveal-delay="1">
+                  <span>Architecture</span>
+                </span>
+                <span class="line" data-reveal-delay="2">
+                  <span>as a study of</span>
+                </span>
+                <span class="line hero__accent" data-reveal-delay="3">
+                  <span>light.</span>
+                </span>
+              </h1>
+              <a class="scene__cta hero__work-link" href="/work">Explore projects <span class="arrow" aria-hidden="true">→</span></a>
+            </div>
+            
+          </div>
+
+          <div class="hero__scroll" data-hero-fade aria-hidden="true">
+            <span class="bar"></span>
+            Scroll to enter
+          </div>
+        </section>
+      </div>
 
       {/* STATEMENT — a still, generous moment; large editorial type */}
       <section class="statement section" aria-label="Studio statement">
