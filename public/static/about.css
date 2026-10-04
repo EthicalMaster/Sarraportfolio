@@ -120,7 +120,7 @@
 
 /* Second pass: stronger choreography and direct interaction. */
 .ap-opening__copy h1 {transform:translate3d(var(--heading-x,0px),0,0);}
-.ap-portrait__placeholder {border-radius:var(--portrait-radius,180px) var(--portrait-radius,180px) 12px 12px;}
+.ap-portrait img,.ap-portrait__placeholder {border-radius:var(--portrait-radius,180px) var(--portrait-radius,180px) 12px 12px;}
 .ap-portrait__cross {transform:rotate(var(--portrait-turn,0deg));}
 .ap-study {background:radial-gradient(ellipse at var(--sun-position,80%) 20%,#eee0c7,transparent 65%),#e1d5c5;}
 .ap-study__large-number {position:absolute;top:15px;left:25px;font-size:clamp(65px,8vw,110px);font-family:var(--font-display);letter-spacing:-.08em;line-height:1;color:#725c4624;pointer-events:none;}
@@ -171,3 +171,6 @@
  .ap-opening__copy h1,.ap-portrait__cross,.ap-thought h3,.ap-milestone__body h3,.ap-skill,.ap-connect h2,.ap-journey-orbit,.ap-interest__art {transform:none!important;}
  .ap-interest__art,.ap-interest__art > span,.ap-study-controls a::after {transition:none;}.ap-drawing__plan {stroke-dasharray:none;}.ap-journey-stage {position:static;}
 }
+
+/* Keep the supplied portrait natural, with the face clear of the arched frame. */
+.ap-portrait img {display:block;object-position:50% 38%;background:#d8c9b7;}

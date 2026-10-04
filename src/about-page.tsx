@@ -17,7 +17,7 @@ export function AboutPage() {
    <div class="ap-opening__grid">
     <div class="ap-opening__copy"><h1>Sarra,<br /><span>in perspective.</span></h1><p class="ap-lead">{profile.lead}</p><div class="ap-education"><span class="mono">{profile.stage}</span><span>{profile.degree}<br />{profile.college}</span></div><a class="text-link" href="#perspective">A little more about me <span aria-hidden="true">↓</span></a></div>
     <figure class="ap-portrait" data-about-portrait>
-     {profile.portrait ? <img src={profile.portrait} alt={profile.portraitAlt} width="800" height="1000" /> : <div class="ap-portrait__placeholder" role="img" aria-label="Portrait placeholder for Sarra Saifee"><span class="ap-portrait__number">01 / A portrait in progress</span><span class="ap-monogram" aria-hidden="true">S<span>S</span></span><div class="ap-portrait__cross" aria-hidden="true">+</div><span class="ap-portrait__label">Sarra Saifee<br /><small>Portrait to be added</small></span></div>}
+     {profile.portrait ? <img src={profile.portrait} alt={profile.portraitAlt} width="768" height="1360" loading="eager" fetchpriority="high" decoding="async" /> : <div class="ap-portrait__placeholder" role="img" aria-label="Portrait placeholder for Sarra Saifee"><span class="ap-portrait__number">01 / A portrait in progress</span><span class="ap-monogram" aria-hidden="true">S<span>S</span></span><div class="ap-portrait__cross" aria-hidden="true">+</div><span class="ap-portrait__label">Sarra Saifee<br /><small>Portrait to be added</small></span></div>}
      <figcaption>Looking closely. Thinking spatially.</figcaption>
     </figure>
    </div>

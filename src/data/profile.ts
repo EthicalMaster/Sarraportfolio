@@ -1,7 +1,7 @@
 // Verified biography: supplied About information document + user clarification.
-// Missing portrait/social URLs are intentional, not fabricated profile assets.
+// Portrait supplied by the user; public social links live in site.ts.
 export const profile = {
-  portrait: '',
+  portrait: '/images/sarra-saifee-portrait.jpg',
   portraitAlt: 'Sarra Saifee',
   college: 'Sage University, Indore',
   degree: 'Bachelor of Architecture',
