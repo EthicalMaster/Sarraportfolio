@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
-import { Ph, FeaturedRow, WorkCard } from './components'
+import { Ph, WorkCard } from './components'
 import { site, about } from './data/site'
 import {
   allProjects,
@@ -51,14 +51,14 @@ app.get('/', (c) => {
 
           {/* Technical strip — coordinate / index line across the top of the frame */}
           <div class="hero__strip" data-hero-fade aria-hidden="true">
-            <span>{site.location} · 55.6761°N</span>
+            <span>Architecture student · Year 05</span>
             <span>Portfolio — {site.year}</span>
           </div>
 
           <div class="hero__inner">
             <div class="hero__lead" data-hero-title>
               <p class="hero__eyebrow line" data-reveal-delay="1">
-                <span>Selected works in space, light &amp; material</span>
+                <span>Sarra Saifee · Selected portfolio</span>
               </p>
               <h1 class="hero__title display">
                 <span class="line" data-reveal-delay="1">
@@ -83,85 +83,64 @@ app.get('/', (c) => {
         </section>
       </div>
 
-      {/* STATEMENT — a still, generous moment; large editorial type */}
-      <section class="statement section" aria-label="Studio statement">
+      <div class="home-story" data-home-story>
+      <section class="introduction section" aria-labelledby="intro-title" data-motion-intro>
         <div class="wrap">
-          <p class="marker" data-reveal>
-            <span class="idx">01</span> Practice
-          </p>
-          <div class="statement__grid">
-            <p class="statement__lead" data-reveal data-reveal-delay="1">
-              Buildings that are quiet, but precise.
-            </p>
-            <div class="statement__body" data-reveal data-reveal-delay="2">
-              <p>
-                A practice organised around a single idea, held clearly through structure, light and material. Each
-                project begins in section — testing how a person moves through space, and how daylight changes across a
-                day and a year.
-              </p>
-              <p class="mono statement__count">
-                {count} selected works — {new Date().getFullYear()}
-              </p>
-            </div>
+          <p class="marker"><span class="idx">01</span> A perspective in progress</p>
+          <h2 id="intro-title" class="intro-statement"><span data-type-line>Learning to see.</span><span data-type-line>Designing to</span><span data-type-line>connect.</span></h2>
+          <div class="intro-bottom">
+            <div class="intro-signature" aria-hidden="true"><span class="intro-cross">+</span><span>Space. Light. Everyday life.</span></div>
+            <div class="intro-copy"><p>I’m Sarra, a fifth-year architecture student exploring the relationships between space, light and everyday life.</p><p>This portfolio brings together architectural studies, interior explorations and an evolving approach to visual storytelling.</p><a class="text-link" href="/about">Meet Sarra <span aria-hidden="true">↗</span></a></div>
           </div>
         </div>
       </section>
 
-      {/* SIGNATURE INTERACTION — a pinned horizontal "index".
-          As you scroll vertically, the full portfolio pans horizontally:
-          one elegant horizontal moment inside a vertical page. On mobile it
-          degrades to a calm horizontal scroll-snap strip. */}
-      <section class="index" aria-label="Portfolio index" data-index>
-        <div class="index__sticky">
-          <div class="wrap index__head">
-            <p class="marker"><span class="idx">—</span> The full index</p>
-            <div class="index__actions">
-              <p class="index__hint mono" aria-hidden="true">Scroll →</p>
-              <a class="scene__cta index__skip" href="#selected-work">Selected work <span class="arrow" aria-hidden="true">↓</span></a>
-            </div>
-          </div>
-          <div class="index__track" data-index-track>
-            {allProjects().map((p: Project, i: number) => (
-              <a class="index__item" href={`/work/${p.slug}`} aria-label={`View ${p.title}`}>
-                <div class="index__media">
-                  <Ph src={p.coverImage} alt={`${p.title} — ${p.category}`} />
-                  <span class="index__no mono" aria-hidden="true">{pad(p.order)}</span>
-                </div>
-                <div class="index__meta">
-                  <span class="index__name">{p.title}</span>
-                  <span class="index__cat mono">{p.category}</span>
-                </div>
-              </a>
+      <div class="spatial-ribbon" aria-hidden="true"><div data-motion-ribbon><span>Space</span><i>↗</i><span>Light</span><i>↗</i><span>Material</span><i>↗</i><span>Space</span><i>↗</i><span>Light</span></div></div>
+
+      <section class="selected section" id="selected-work" aria-labelledby="selected-title">
+        <div class="wrap">
+          <div class="editorial-heading" data-reveal><div><p class="marker"><span class="idx">02</span> Selected work</p><h2 id="selected-title" class="editorial-title">Four perspectives.<br />An evolving practice.</h2></div><a class="text-link" href="/work">Explore all {count} projects <span aria-hidden="true">↗</span></a></div>
+          <div class="project-deck" data-project-deck>
+            {featured.slice(0, 4).map((p, i) => (
+              <article class="project-chapter" data-project-chapter style={`--chapter-order:${i + 1}`} aria-labelledby={`project-title-${i}`}>
+                <a class="project-panel" href={`/work/${p.slug}`} aria-label={`Explore ${p.title}`}>
+                  <div class="project-panel__visual"><div class="project-panel__picture" data-project-picture><Ph src={p.coverImage} alt={`${p.title} — ${p.category}`} /></div><span class="project-panel__folio" aria-hidden="true">{pad(i + 1)}<small>/ 04</small></span><span class="project-panel__category mono">{p.category}</span></div>
+                  <div class="project-panel__info"><div><p class="mono">Selected work / {pad(i + 1)}</p><h3 id={`project-title-${i}`}>{p.title}</h3><p class="project-panel__subtitle">{p.subtitle}</p></div><div class="project-panel__bottom"><span>Explore project</span><span class="round-arrow" aria-hidden="true">↗</span></div></div>
+                </a>
+              </article>
             ))}
           </div>
-          <div class="index__progress" aria-hidden="true"><span data-index-bar></span></div>
+          <div class="project-end"><p class="mono">A selection, not the whole story.</p><a class="text-link" href="/work">Continue to all projects <span aria-hidden="true">↗</span></a></div>
         </div>
       </section>
 
-      {/* FEATURED WORK — the heart: a cinematic scroll sequence */}
-      <section class="work" id="selected-work" tabindex="-1" aria-label="Selected work" data-seq>
-        <div class="wrap">
-          <div class="work__head">
-            <p class="marker" data-reveal>
-              <span class="idx">02</span> Selected Work
-            </p>
-            <h2 class="work__title display" data-reveal data-reveal-delay="1">
-              A sequence of<br />spaces.
-            </h2>
+      <section class="thinking section" aria-labelledby="thinking-title" data-motion-process>
+        <div class="wrap thinking-layout">
+          <div class="thinking-heading"><p class="marker"><span class="idx">03</span> Ways of seeing</p><h2 id="thinking-title" class="editorial-title">From a line.<br />To a space.</h2>
+            <div class="spatial-study" aria-hidden="true"><div class="spatial-study__grid"></div><div class="spatial-study__form"><span class="spatial-plane spatial-plane--base"></span><span class="spatial-plane spatial-plane--one"></span><span class="spatial-plane spatial-plane--two"></span><span class="spatial-plane spatial-plane--three"></span><span class="spatial-axis"></span></div><div class="spatial-study__caption"><span>Spatial study</span><span data-study-phase>01 / Observe</span></div><div class="spatial-study__progress"><span></span></div></div>
+          </div>
+          <div class="thinking-steps">
+            {[
+              ['Observe', 'Read the context.', 'Begin with place: its light, movement, scale and the people who use it.'],
+              ['Explore', 'Think through drawing.', 'Use lines, diagrams and spatial studies to ask questions and test possibilities.'],
+              ['Develop', 'Give the idea form.', 'Bring proportion, structure and material into conversation through models and drawings.'],
+              ['Communicate', 'Make space legible.', 'Compose views and sequences that explain the idea and the atmosphere it could create.'],
+            ].map(([label, title, text], i) => (
+              <article class="thinking-step" data-process-step><div class="thinking-step__label"><span class="mono">{pad(i + 1)} / {label}</span><span aria-hidden="true">↗</span></div><h3>{title}</h3><p>{text}</p></article>
+            ))}
           </div>
         </div>
+      </section>
 
-        {featured.map((p, i) => (
-          <FeaturedRow project={p} i={i} total={featured.length} />
-        ))}
-
-        <div class="wrap">
-          <a class="work__all" href="/work" data-reveal>
-            <span>View all {count} projects</span>
-            <span class="arrow" aria-hidden="true">→</span>
-          </a>
+      <section class="practice section" aria-labelledby="practice-title" data-motion-practice>
+        <div class="wrap"><div class="practice-heading"><p class="marker"><span class="idx">04</span> Education meets practice</p><h2 class="editorial-title" id="practice-title">Still learning.<br />Already exploring.</h2></div>
+          <div class="practice-facts"><div data-practice-fact><strong>05</strong><span>Year of undergraduate study</span></div><div data-practice-fact><strong>08<small> months</small></strong><span>Completed junior architect internship</span></div><div data-practice-fact><strong>03<small> months</small></strong><span>Current internship · ongoing</span></div></div>
+          <div class="practice-note"><p>Developing a design perspective through academic exploration and hands-on experience in architectural practice.</p><a class="text-link" href="/about">More about my journey <span aria-hidden="true">↗</span></a></div>
         </div>
       </section>
+      <section class="home-contact section" data-motion-contact><div class="wrap"><p class="marker">A conversation starts here</p><a href="/contact" class="home-contact__link"><span data-contact-word>Let’s connect.</span><span class="contact-arrow" aria-hidden="true">↗</span></a><p>For opportunities, collaborations and conversations about architecture.</p></div></section>
+      </div>
+
     </>,
     { title: undefined, description: undefined },
   )

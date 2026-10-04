@@ -6,7 +6,7 @@
 
 export const site = {
   name: 'Sarra Saifee',
-  role: 'Architect & Visualizer',
+  role: 'Architecture Student',
   tagline: 'Architecture · Interior · Visualization',
   location: 'Copenhagen',
   email: 'studio@sarrasaifee.com',
@@ -30,7 +30,7 @@ export const nav = [
 
 export const about = {
   lead:
-    'I am an architect and architectural visualizer based in Copenhagen, working across residential, cultural, and hospitality scales. My practice moves between the drawing, the model, and the render — treating each as a way of thinking about space rather than merely representing it.',
+    'I am a fifth-year undergraduate architecture student, developing my design perspective through academic work and hands-on experience in architectural practice. My portfolio explores space, light and material through drawings, models and visualization.',
   paragraphs: [
     'I am drawn to buildings that are quiet but precise: projects where a single clear idea organises structure, light, and material into something that feels inevitable. Much of my work begins in section, testing how a person moves through space and how daylight changes across a day and a year.',
     'Alongside built and academic projects, I produce architectural visualizations for studios who want their ideas communicated with restraint and atmosphere rather than spectacle. I care about the honest depiction of material, weather, and time.',
@@ -64,9 +64,8 @@ export const about = {
   ],
   software: ['Rhino', 'Grasshopper', 'AutoCAD', 'Revit', 'V-Ray', 'Corona', 'Blender', 'Photoshop', 'InDesign'],
   timeline: [
-    { year: '2024 — present', title: 'Independent Practice', detail: 'Architecture, interiors & visualization' },
-    { year: '2021 — 2024', title: 'Studio Architect', detail: 'Cultural & residential projects, Copenhagen' },
-    { year: '2019 — 2021', title: 'M.Arch', detail: 'Graduate thesis with distinction' },
-    { year: '2015 — 2019', title: 'B.Arch', detail: 'Foundation in design & representation' },
+    { year: 'Ongoing', title: 'Architecture internship', detail: 'Current placement · three months of experience so far' },
+    { year: '8 months', title: 'Junior architect internship', detail: 'Completed architectural practice placement' },
+    { year: 'Year 05', title: 'Undergraduate architecture studies', detail: 'Currently in the fifth year' },
   ],
 }

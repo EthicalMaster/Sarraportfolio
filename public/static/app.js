@@ -270,8 +270,8 @@ ${body}
     update();
   }
 
-  // Hero: cinematic forward-drift on scroll — the image scales & darkens as
-  // you "enter" the space; the headline drifts up and fades; the technical
+  // Hero: cinematic forward-drift on scroll — light and material emerge as
+  // you enter the space; the headline drifts up and fades; the technical
   // strip and scroll hint fade out. Normal scroll, no hijack.
   // Updated to calculate progress relative to the hero-video-wrap.
   function initHeroDrift() {
@@ -280,7 +280,8 @@ ${body}
     const title = document.querySelector('[data-hero-title]');
     const fades = Array.from(document.querySelectorAll('[data-hero-fade]'));
     const wrap = document.querySelector('[data-hero-video-wrap]');
-    if (!media) return;
+    const hero = media ? media.closest('.hero') : null;
+    if (!media || !hero) return;
     let ticking = false;
     function update() {
       ticking = false;
@@ -292,7 +293,16 @@ ${body}
       // ease the progress for a filmic feel
       const e = p * p * (3 - 2 * p);
       media.style.transform = 'translate3d(0,' + (y * 0.28).toFixed(1) + 'px,0) scale(' + (1 + e * 0.16).toFixed(3) + ')';
-      media.style.filter = 'saturate(' + (0.9 - e * 0.15).toFixed(2) + ') contrast(1.05) brightness(' + (0.68 - e * 0.28).toFixed(2) + ')';
+      const runway = wrap ? Math.max(1, wrap.offsetHeight - hero.offsetHeight) : vh;
+      const sequence = Math.min(1, y / runway);
+      const exit = wrap && !wrap.classList.contains("hero-video-wrap--static") ? Math.max(0, Math.min(1, (sequence - 0.82) / 0.18)) : 0;
+      const framed = exit * exit * (3 - 2 * exit);
+      hero.style.clipPath = "inset(" + (framed * 3).toFixed(2) + "% " + (1 + framed * 4).toFixed(2) + "% round " + (12 + framed * 12).toFixed(1) + "px)";
+      // Most exposure opens as the text leaves; the final lift follows the
+      // building sequence. Reverse scrolling restores the exact opening state.
+      hero.style.setProperty('--hero-brightness', (0.82 + e * 0.13 + sequence * 0.05).toFixed(3));
+      hero.style.setProperty('--hero-saturation', (0.96 + e * 0.04).toFixed(3));
+      hero.style.setProperty('--hero-scrim-opacity', (1 - e * 0.68).toFixed(3));
       if (title) {
         title.style.transform = 'translate3d(0,' + (y * -0.06).toFixed(1) + 'px,0)';
         title.style.opacity = String(Math.max(0, 1 - e * 1.15));
@@ -338,7 +348,8 @@ ${body}
       if (!ready || REDUCED) return;
       const rect = wrap.getBoundingClientRect();
       const range = Math.max(1, rect.height - hero.offsetHeight);
-      const progress = Math.min(1, Math.max(0, -rect.top / range));
+      // Complete the film before the final framing transition.
+      const progress = Math.min(1, Math.max(0, -rect.top / (range * 0.82)));
       target = progress * Math.max(0, video.duration - frameDuration);
       schedule();
     }
@@ -487,10 +498,8 @@ ${body}
    * ------------------------------------------------------------------ */
   function updateNavigationState() {
     const path = location.pathname.replace(/\/$/, '') || '/';
-    const discipline = new URLSearchParams(location.search).get('discipline');
     const detail = path.startsWith('/work/');
-    const current = path === '/work' && ['architecture', 'interior'].includes(discipline)
-      ? `/work?discipline=${discipline}` : detail ? '/work' : path;
+    const current = detail ? '/work' : path;
     document.querySelectorAll('.nav__links a, [data-mnav] a').forEach((link) => {
       if (link.getAttribute('href') === current) link.setAttribute('aria-current', detail ? 'location' : 'page');
       else link.removeAttribute('aria-current');
@@ -502,12 +511,9 @@ ${body}
     window.addEventListener('popstate', updateNavigationState);
     const nav = document.querySelector('[data-nav]');
     if (nav && !REDUCED) {
-      let last = 0;
       window.addEventListener('scroll', () => {
         const y = window.scrollY;
-        const keepVisible = document.body.classList.contains('mnav-open') || nav.contains(document.activeElement);
-        nav.classList.toggle('is-hidden', !keepVisible && y > last && y > 240);
-        last = y;
+        nav.classList.toggle('is-compact', y > 80);
       }, { passive: true });
       nav.addEventListener('focusin', () => nav.classList.remove('is-hidden'));
     }

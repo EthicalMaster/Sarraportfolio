@@ -14,7 +14,7 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
   const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — ${site.role}`
   const desc =
     description ||
-    'Cinematic architectural editorial portfolio — architecture, interior & visualization by Sarra Saifee, Copenhagen.'
+    'Architecture, interiors and visual explorations by Sarra Saifee, a fifth-year undergraduate architecture student.'
   return (
     <html lang="en">
       <head>
@@ -22,7 +22,7 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{pageTitle}</title>
         <meta name="description" content={desc} />
-        <meta name="theme-color" content="#141312" />
+        <meta name="theme-color" content="#F0EBE6" />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={desc} />
         <meta property="og:type" content="website" />
@@ -33,16 +33,18 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Space+Grotesk:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Geist:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
         <link rel="stylesheet" href="/static/style.css" />
+        <link rel="stylesheet" href="/static/home-motion.css" />
         <link
           rel="icon"
           href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23141312'/%3E%3Ctext x='16' y='23' font-family='serif' font-size='20' fill='%23c8a97e' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E"
         />
         <script defer src="/static/arrival.js"></script>
         <script defer src="/static/app.js"></script>
+        <script defer src="/static/home-motion.js"></script>
       </head>
       <body id="top">
         <div class="arrival" data-arrival role="dialog" aria-modal="true" aria-label="Preparing portfolio" aria-describedby="arrival-status">
@@ -60,6 +62,7 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
             <div class="arrival__meta"><span>Architecture · Interior · Visualization</span><button type="button" data-arrival-skip>Enter now <span aria-hidden="true">↗</span></button></div>
           </div>
         </div>
+        <a class="skip-link" href="#content">Skip to content</a>
         <SiteNav />
         <MobileNav />
         <main id="content">{children}</main>
@@ -71,8 +74,6 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
 
 const navigationLinks = [
   { href: '/work', label: 'Work' },
-  { href: '/work?discipline=architecture', label: 'Architecture' },
-  { href: '/work?discipline=interior', label: 'Interior' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ]
@@ -80,10 +81,7 @@ const navigationLinks = [
 function NavigationLinks({ mobile = false }: { mobile?: boolean }) {
   const { req } = useRequestContext()
   const path = req.path.replace(/\/$/, '') || '/'
-  const discipline = req.query('discipline')
-  const current = path === '/work' && ['architecture', 'interior'].includes(discipline || '')
-    ? `/work?discipline=${discipline}`
-    : path.startsWith('/work/') ? '/work' : path
+  const current = path.startsWith('/work/') ? '/work' : path
   const links = mobile ? [{ href: '/', label: 'Home' }, ...navigationLinks] : navigationLinks
   return <>{links.map(({ href, label }) => (
     <a href={href} aria-current={href === current ? (path.startsWith('/work/') ? 'location' : 'page') : undefined}>{label}</a>
@@ -95,7 +93,7 @@ function SiteNav() {
     <header class="nav" data-nav>
       <a class="nav__brand" href="/" aria-label={`${site.name}, home`}>
         {site.name}
-        <small>{site.tagline}</small>
+        <small>Architecture portfolio</small>
       </a>
       <nav class="nav__links" aria-label="Primary">
         <NavigationLinks />
@@ -114,7 +112,7 @@ function MobileNav() {
     <nav class="mnav" id="mobile-nav" data-mnav aria-label="Mobile" inert>
       <NavigationLinks mobile />
       <div class="mnav__meta">
-        <span>{site.location}</span>
+        <span>Fifth-year architecture student</span>
         <span>{site.email}</span>
       </div>
     </nav>
