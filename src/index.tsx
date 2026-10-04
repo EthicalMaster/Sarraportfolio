@@ -4,6 +4,7 @@ import { Ph, WorkCard } from './components'
 import { site } from './data/site'
 import { profile } from './data/profile'
 import { AboutPage } from './about-page'
+import { ContactPage } from './contact-page'
 import {
   allProjects,
   featuredProjects,
@@ -332,44 +333,7 @@ app.get('/about', (c) => c.render(<AboutPage />, { title: 'About', description: 
 /* ==========================================================================
    CONTACT
    ========================================================================== */
-app.get('/contact', (c) => {
-  return c.render(
-    <>
-      <section class="contact" aria-label="Contact">
-        <div class="wrap contact__inner">
-          <p class="marker" data-reveal>
-            <span class="idx">—</span> Contact
-          </p>
-
-          <h1 class="contact__head display" data-reveal data-reveal-delay="1">
-            <span class="line" data-reveal-delay="1"><span>Let’s talk</span></span>
-            <span class="line" data-reveal-delay="2"><span>about a <em>project.</em></span></span>
-          </h1>
-
-          <div class="contact__links" data-reveal data-reveal-delay="2">
-            <a class="contact__link" href={`mailto:${site.email}`}>
-              <span class="mono contact__link-k">Email</span>
-              <span class="contact__link-v">{site.email}</span>
-            </a>
-            {site.social.filter(s => s.href).map((s) => (
-              <a class="contact__link" href={s.href} target="_blank" rel="noopener">
-                <span class="mono contact__link-k">{s.label}</span>
-                <span class="contact__link-v">
-                  {s.label} <span class="arrow" aria-hidden="true">↗</span>
-                </span>
-              </a>
-            ))}
-          </div>
-
-          <p class="contact__foot mono" data-reveal>
-            {site.location} — by appointment
-          </p>
-        </div>
-      </section>
-    </>,
-    { title: 'Contact', description: `Contact ${site.name} for architecture, interior and visualization work.` },
-  )
-})
+app.get('/contact', (c) => c.render(<ContactPage />, { title: 'Contact', description: 'Get in touch with Sarra Saifee, a fifth-year architecture undergraduate in Indore, about opportunities, collaborations and project enquiries.' }))
 
 /* ==========================================================================
    404
