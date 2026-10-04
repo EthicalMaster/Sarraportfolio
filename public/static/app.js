@@ -378,6 +378,9 @@ ${body}
     function markReady() {
       // Metadata alone does not mean a frame is available to display.
       if (ready || video.dataset.prepared !== 'true' || video.readyState < 2 || !Number.isFinite(video.duration) || video.duration <= 0) return;
+      // A background download must not expand the hero above someone reading below it.
+      // Activate the long scroll sequence when they return to the top.
+      if (wrap.getBoundingClientRect().top < -32) return;
       ready = true;
       hero.classList.add('hero--video-ready');
       wrap.classList.remove('hero-video-wrap--static');
@@ -393,9 +396,11 @@ ${body}
       hero.classList.remove('hero--video-ready');
       wrap.classList.add('hero-video-wrap--static');
     });
-    window.addEventListener('scroll', measure, { passive: true });
-    window.addEventListener('resize', measure, { passive: true });
-    window.addEventListener('pageshow', measure);
+    function refreshVideo() { markReady(); measure(); }
+    window.addEventListener('scroll', refreshVideo, { passive: true });
+    window.addEventListener('resize', refreshVideo, { passive: true });
+    window.addEventListener('pageshow', refreshVideo);
+    window.addEventListener('portfolio:entered', refreshVideo);
     document.addEventListener('visibilitychange', () => {
       cancelAnimationFrame(frame);
       frame = 0;

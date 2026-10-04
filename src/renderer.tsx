@@ -29,7 +29,7 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
         <meta property="og:type" content="website" />
         {/* Tiny fail-open bootstrap: never leave the site behind a failed loader. */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){var r=document.documentElement;try{if(location.pathname!=='/'&&sessionStorage.getItem('sarra-entered'))return;}catch(e){}r.classList.add('is-loading');window.setTimeout(function(){if(!r.classList.contains('is-loading'))return;window.dispatchEvent(new Event('portfolio:skip'));r.classList.remove('is-loading');document.querySelectorAll('[data-loader-inert]').forEach(function(e){e.inert=false;});window.dispatchEvent(new Event('portfolio:entered'));},8000);})();` }} />
-        <style dangerouslySetInnerHTML={{ __html: `.arrival{display:none}html.is-loading{overflow:hidden}html.is-loading .arrival{display:flex;position:fixed;inset:0;z-index:10000;background:#141312;color:#f4f1ec}html:not(.js-ready) .hero-video-wrap{height:auto}` }} />
+        <style dangerouslySetInnerHTML={{ __html: `.arrival{display:none}html.is-loading{overflow:hidden}html.is-loading .arrival{display:flex;position:fixed;inset:0;z-index:10000;background:#f0ebe6;color:#4f4742}html:not(.js-ready) .hero-video-wrap{height:auto}` }} />
         {/* Fonts: preconnect + display=swap keeps first paint fast */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
@@ -39,6 +39,8 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
         />
         <link rel="stylesheet" href="/static/style.css" />
         <link rel="stylesheet" href="/static/home-motion.css" />
+        <link rel="stylesheet" href="/static/arrival.css" />
+        <link rel="stylesheet" href="/static/interaction.css" />
         {isAbout && <link rel="stylesheet" href="/static/about.css" />}
         <link
           rel="icon"
@@ -47,22 +49,29 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
         <script defer src="/static/arrival.js"></script>
         <script defer src="/static/app.js"></script>
         <script defer src="/static/home-motion.js"></script>
+        <script defer src="/static/interaction.js"></script>
         {isAbout && <script defer src="/static/about.js"></script>}
       </head>
       <body id="top">
         <div class="arrival" data-arrival role="dialog" aria-modal="true" aria-label="Preparing portfolio" aria-describedby="arrival-status">
           <div class="arrival__top"><span class="arrival__brand">{site.name}</span><span class="arrival__edition">Portfolio — {site.year}</span></div>
           <div class="arrival__center">
-            <div class="arrival__drawing" aria-hidden="true">
-              <svg viewBox="0 0 320 200" fill="none"><path class="arrival__guide" d="M20 170H300M45 20V185M275 20V185M20 40H300" /><path class="arrival__outline" pathLength="100" d="M60 165V70L160 25L260 70V165L160 195L60 165M60 70L160 110L260 70M160 110V195M160 25V110M60 115L160 155L260 115" /></svg>
-            </div>
-            <p class="arrival__eyebrow">Space · Light · Material</p>
-            <p class="arrival__title">A space taking shape.</p>
+            <div><p class="arrival__eyebrow">An introduction in layers</p><p class="arrival__title">A space.<br /><span>A perspective.</span></p></div>
+            <figure class="arrival__drawing" aria-hidden="true">
+              <svg viewBox="0 0 400 340" fill="none">
+                <path class="arrival__guide" d="M20 290H380M40 20V320M360 20V320M20 50H380M200 15V330M20 170H380M55 302H345M55 296V308M345 296V308" />
+                <g class="arrival__slab arrival__slab--base"><path d="M65 240L200 175L335 240L200 305Z"/><path d="M65 240V253L200 318L335 253V240L200 305Z" fill="#bba58c"/></g>
+                <g class="arrival__slab arrival__slab--middle"><path d="M110 215V128L200 85L290 128V215L200 260Z"/><path d="M200 172L290 128V215L200 260Z" fill="#9c8064"/><path d="M130 166V208L176 230V189ZM220 192V235L264 213V171Z" fill="#e9dfd2"/></g>
+                <g class="arrival__slab arrival__slab--roof"><path d="M85 118L200 62L315 118L200 174Z"/><path d="M85 118V129L200 185L315 129V118L200 174Z" fill="#c9b299"/></g>
+                <path class="arrival__outline" pathLength="100" d="M65 240L200 305L335 240L200 175ZM110 215V128L200 85L290 128V215L200 260ZM110 128L200 172L290 128M200 172V260M85 118L200 62L315 118L200 174Z" />
+              </svg>
+              <figcaption><span data-arrival-phase>01 / Foundation</span><span>Study / SS—01</span></figcaption>
+            </figure>
           </div>
           <div class="arrival__bottom">
-            <div class="arrival__readout"><p id="arrival-status" data-arrival-status role="status">Preparing your visit</p><span class="arrival__number" aria-hidden="true"><span data-arrival-number>0</span><small>%</small></span></div>
+            <div class="arrival__readout"><p id="arrival-status" data-arrival-status role="status">Preparing the first view</p><span class="arrival__number" aria-hidden="true"><span data-arrival-number>0</span><small>%</small></span></div>
             <div class="arrival__track" data-arrival-progress role="progressbar" aria-label="Portfolio preparation" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
-            <div class="arrival__meta"><span>Architecture · Interior · Visualization</span><button type="button" data-arrival-skip>Enter now <span aria-hidden="true">↗</span></button></div>
+            <div class="arrival__meta"><span>Space · Light · Material</span><button type="button" data-arrival-skip>Enter now <span aria-hidden="true">↗</span></button></div>
           </div>
         </div>
         <a class="skip-link" href="#content">Skip to content</a>

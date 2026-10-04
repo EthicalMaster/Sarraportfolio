@@ -1,0 +1,12 @@
+/* Fine-pointer enhancement. The native cursor and keyboard focus remain available. */
+a,button,[role="button"],input,select,textarea,summary {-webkit-tap-highlight-color:transparent;}
+a:focus-visible,button:focus-visible,[role="button"]:focus-visible {outline:2px solid #a47b54;outline-offset:5px;}
+a,button,[role="button"] {touch-action:manipulation;}
+.is-pressing {filter:brightness(.86);}
+.pointer-ring {position:fixed;top:0;left:0;width:32px;height:32px;z-index:11000;pointer-events:none;opacity:0;transition:opacity .18s;}
+.pointer-ring::before {content:"";position:absolute;inset:0;border:1px solid #aa8968;border-radius:50%;background:rgba(181,149,111,.07);box-shadow:0 0 0 1px rgba(240,235,230,.22);transition:transform .22s ease-out,background .22s;}
+.pointer-ring.is-visible {opacity:1;}.pointer-ring.is-link::before {transform:scale(1.65);background:rgba(181,149,111,.16);}.pointer-ring.is-down::before {transform:scale(.65);}
+.press-halo {position:fixed;width:38px;height:38px;margin:-19px;border:1px solid #a47b54;border-radius:50%;background:rgba(164,123,84,.13);pointer-events:none;z-index:11001;animation:press-halo .42s ease-out forwards;}
+@keyframes press-halo {from {transform:scale(.4);opacity:.85;}to {transform:scale(1.5);opacity:0;}}
+@media(prefers-reduced-motion:reduce) {.pointer-ring,.press-halo {display:none!important;}}
+@media(forced-colors:active) {.pointer-ring,.press-halo {display:none;}}
