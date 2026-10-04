@@ -11,6 +11,7 @@ declare module 'hono' {
 }
 
 export const renderer = jsxRenderer(({ children, title, description }) => {
+  const isAbout = useRequestContext().req.path.replace(/\/$/, '') === '/about'
   const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — ${site.role}`
   const desc =
     description ||
@@ -38,6 +39,7 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
         />
         <link rel="stylesheet" href="/static/style.css" />
         <link rel="stylesheet" href="/static/home-motion.css" />
+        {isAbout && <link rel="stylesheet" href="/static/about.css" />}
         <link
           rel="icon"
           href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23141312'/%3E%3Ctext x='16' y='23' font-family='serif' font-size='20' fill='%23c8a97e' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E"
@@ -45,6 +47,7 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
         <script defer src="/static/arrival.js"></script>
         <script defer src="/static/app.js"></script>
         <script defer src="/static/home-motion.js"></script>
+        {isAbout && <script defer src="/static/about.js"></script>}
       </head>
       <body id="top">
         <div class="arrival" data-arrival role="dialog" aria-modal="true" aria-label="Preparing portfolio" aria-describedby="arrival-status">
@@ -143,7 +146,7 @@ function SiteFooter() {
           </nav>
 
           <div class="foot__social">
-            {site.social.map((s) => (
+            {site.social.filter(s => s.href).map((s) => (
               <a href={s.href} target="_blank" rel="noopener">
                 {s.label} <span aria-hidden="true">↗</span>
               </a>

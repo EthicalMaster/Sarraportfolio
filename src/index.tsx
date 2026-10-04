@@ -1,7 +1,9 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
 import { Ph, WorkCard } from './components'
-import { site, about } from './data/site'
+import { site } from './data/site'
+import { profile } from './data/profile'
+import { AboutPage } from './about-page'
 import {
   allProjects,
   featuredProjects,
@@ -325,111 +327,7 @@ app.get('/work/:slug', (c) => {
 /* ==========================================================================
    ABOUT
    ========================================================================== */
-app.get('/about', (c) => {
-  return c.render(
-    <>
-      {/* Opening — a large editorial statement rather than a resume header */}
-      <section class="about__open" aria-label="About">
-        <div class="wrap">
-          <p class="marker" data-reveal>
-            <span class="idx">—</span> Profile
-          </p>
-          <h1 class="about__stmt display" data-reveal data-reveal-delay="1">
-            Between the drawing, the model, and the render.
-          </h1>
-          <p class="about__lead measure" data-reveal data-reveal-delay="2">
-            {about.lead}
-          </p>
-        </div>
-      </section>
-
-      {/* Atmospheric band */}
-      <section class="about__band" aria-hidden="true">
-        <div class="frame" data-clip>
-          <Ph src="/img/about/wide" alt="Studio atmosphere" ratio="21 / 9" parallax={0.06} />
-        </div>
-      </section>
-
-      {/* Approach — three disciplines expressed as prose, not cards */}
-      <section class="about__approach section" aria-label="Approach">
-        <div class="wrap">
-          <p class="marker" data-reveal>
-            <span class="idx">01</span> Approach
-          </p>
-          <div class="about__prose">
-            {about.approach.map((a, i) => (
-              <div class="about__disc" data-reveal data-reveal-delay={String((i % 3) + 1) as any}>
-                <p class="about__disc-k mono">{pad(i + 1)} — {a.k}</p>
-                <p class="about__disc-t">{a.t}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Capabilities + software — a two-column editorial index */}
-      <section class="about__cap section" aria-label="Capabilities">
-        <div class="wrap">
-          <p class="marker" data-reveal>
-            <span class="idx">02</span> Capabilities
-          </p>
-          <div class="about__capgrid">
-            <div class="about__caplist">
-              {about.capabilities.map((c2, i) => (
-                <div class="capgroup" data-reveal data-reveal-delay={String((i % 3) + 1) as any}>
-                  <h3 class="mono">{c2.group}</h3>
-                  <ul>
-                    {c2.items.map((it) => (
-                      <li>{it}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-            <div class="about__side">
-              <div data-reveal>
-                <h3 class="mono">Focus</h3>
-                <ul class="about__focus">
-                  {about.focus.map((f) => (
-                    <li>{f}</li>
-                  ))}
-                </ul>
-              </div>
-              <div data-reveal data-reveal-delay="1">
-                <h3 class="mono">Software &amp; tools</h3>
-                <p class="about__soft">{about.software.join(' · ')}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Timeline — restrained ledger */}
-      <section class="about__exp section" aria-label="Experience and education">
-        <div class="wrap">
-          <p class="marker" data-reveal>
-            <span class="idx">03</span> Experience &amp; education
-          </p>
-          <div class="timeline">
-            {about.timeline.map((t, i) => (
-              <div class="tl" data-reveal data-reveal-delay={String((i % 3) + 1) as any}>
-                <span class="yr mono">{t.year}</span>
-                <div>
-                  <p class="ti">{t.title}</p>
-                  <p class="de">{t.detail}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p class="about__note mono" data-reveal>
-            Placeholder profile — dates, titles &amp; institutions are generic.
-          </p>
-        </div>
-      </section>
-    </>,
-    { title: 'About', description: about.lead },
-  )
-})
+app.get('/about', (c) => c.render(<AboutPage />, { title: 'About', description: profile.lead }))
 
 /* ==========================================================================
    CONTACT
@@ -453,7 +351,7 @@ app.get('/contact', (c) => {
               <span class="mono contact__link-k">Email</span>
               <span class="contact__link-v">{site.email}</span>
             </a>
-            {site.social.map((s) => (
+            {site.social.filter(s => s.href).map((s) => (
               <a class="contact__link" href={s.href} target="_blank" rel="noopener">
                 <span class="mono contact__link-k">{s.label}</span>
                 <span class="contact__link-v">
