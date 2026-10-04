@@ -10,3 +10,13 @@ a,button,[role="button"] {touch-action:manipulation;}
 @keyframes press-halo {from {transform:scale(.4);opacity:.85;}to {transform:scale(1.5);opacity:0;}}
 @media(prefers-reduced-motion:reduce) {.pointer-ring,.press-halo {display:none!important;}}
 @media(forced-colors:active) {.pointer-ring,.press-halo {display:none;}}
+
+/* Shared navigation/footer: comfortable touch targets and long-address wrapping. */
+.mnav__meta {flex-wrap:wrap;}
+.mnav__meta>* {min-width:0;overflow-wrap:anywhere;}
+.foot__social a {overflow-wrap:anywhere;}
+@media(max-width:650px) {
+ .mnav__meta {flex-direction:column;gap:12px;letter-spacing:.035em;}
+ .foot__nav a,.foot__social a,.foot__top-link {min-height:44px;display:inline-flex;align-items:center;}
+ .foot__social {gap:4px;}
+}

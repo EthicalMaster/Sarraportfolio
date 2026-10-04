@@ -19,12 +19,16 @@
   const message=document.createElement('span');message.setAttribute('role','status');
   const retry=document.createElement('button');retry.type='button';retry.textContent='Load motion';retry.hidden=true;
   const dismiss=document.createElement('button');dismiss.type='button';dismiss.textContent='Dismiss';dismiss.setAttribute('aria-label','Dismiss video preparation status');
-  chip.append(message,retry,dismiss);document.body.append(chip);
+  const percent=document.createElement('span');percent.className='hero-preparation__percent';percent.setAttribute('aria-hidden','true');
+  chip.append(message,retry,dismiss,percent);document.body.append(chip);
   let dismissed=false;dismiss.addEventListener('click',()=>{dismissed=true;chip.hidden=true;});
   function showMedia(){
    chip.hidden=!restored||dismissed||mediaState==='off'||mediaState==='ready';
    retry.hidden=mediaState!=='error';
-   message.textContent=mediaState==='error'?'Motion could not load. The still view is ready.':downloadPercent===null?'Preparing background motion…':`Preparing background motion · ${downloadPercent}%`;
+   const label=mediaState==='error'?'Motion could not load. The still view is ready.':'Preparing background motion…';
+   if(message.textContent!==label)message.textContent=label;
+   percent.hidden=mediaState!=='loading'||downloadPercent===null;
+   const value=downloadPercent===null?'':`${downloadPercent}%`;if(percent.textContent!==value)percent.textContent=value;
   }
   function restore(){
    if(restored)return;restored=true;clearTimeout(exitTimer);cancelAnimationFrame(raf);

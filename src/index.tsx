@@ -137,7 +137,7 @@ app.get('/', (c) => {
 
       <section class="practice section" aria-labelledby="practice-title" data-motion-practice>
         <div class="wrap"><div class="practice-heading"><p class="marker"><span class="idx">04</span> Education meets practice</p><h2 class="editorial-title" id="practice-title">Still learning.<br />Already exploring.</h2></div>
-          <div class="practice-facts"><div data-practice-fact><strong>05</strong><span>Year of undergraduate study</span></div><div data-practice-fact><strong>08<small> months</small></strong><span>Completed junior architect internship</span></div><div data-practice-fact><strong>03<small> months</small></strong><span>Current internship · ongoing</span></div></div>
+          <div class="practice-facts"><div data-practice-fact><strong>05</strong><span>Year of undergraduate study</span></div><div data-practice-fact><strong>08<small> months</small></strong><span>Architectural internship · completed</span></div><div data-practice-fact><strong>03<small> months</small></strong><span>Current internship · ongoing</span></div></div>
           <div class="practice-note"><p>Developing a design perspective through academic exploration and hands-on experience in architectural practice.</p><a class="text-link" href="/about">More about my journey <span aria-hidden="true">↗</span></a></div>
         </div>
       </section>

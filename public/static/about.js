@@ -44,6 +44,12 @@
   root.style.setProperty('--ap-progress',String(clamp(-bounds.top/Math.max(1,bounds.height-h))));
   let chapter=0;milestoneRects.forEach((r,i)=>{if(r.top<h*.62)chapter=i;});
   if(chapter!==lastChapter){journeyNumber.textContent='0'+(chapter+1);journeyLabel.textContent=['Learning the foundations','Growing through practice','Expanding the perspective'][chapter];if(!reduced.matches&&journeyNumber.animate)journeyNumber.animate([{opacity:.25,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],{duration:450,easing:'ease-out'});lastChapter=chapter;}
+  const progress=thoughtRects.reduce((total,r)=>total+clamp((h*.6-r.top)/Math.max(1,r.height)),0)/thoughts.length;
+  const level=Math.min(2,Math.floor(progress*3));
+  const label=['01 / Context','02 / Material','03 / Atmosphere'][level];
+  if(phase.textContent!==label)phase.textContent=label;
+  number.textContent='0'+(level+1);
+  controls.forEach((a,i)=>{if(i===level)a.setAttribute('aria-current','step');else a.removeAttribute('aria-current');});
   if(reduced.matches)return;
   const opening=clamp(-introRect.top/h);
   paint(root,'--heading-x',opening*(mobile?-8:-24),'px',blend);
@@ -53,12 +59,6 @@
   skills.forEach((el,i)=>{const p=clamp((h*.9-skillRect.top)/(h*.55));paint(el,'--skill-y',(1-p)*(30+i*35)*(mobile?.3:1),'px',blend);paint(el,'--skill-progress',clamp(p*1.4-i*.1),'',blend);});
   paint(connect,'--connect-x',(1-clamp((h-connectRect.top)/h))*(mobile?-12:-50),'px',blend);
   portrait.style.setProperty('--portrait-y',`${clamp(-introRect.top/h)*(mobile?12:45)}px`);
-  const progress=thoughtRects.reduce((total,r)=>total+clamp((h*.6-r.top)/Math.max(1,r.height)),0)/thoughts.length;
-  const level=Math.min(2,Math.floor(progress*3));
-  const label=['01 / Context','02 / Material','03 / Atmosphere'][level];
-  if(phase.textContent!==label)phase.textContent=label;
-  number.textContent='0'+(level+1);
-  controls.forEach((a,i)=>{if(i===level)a.setAttribute('aria-current','step');else a.removeAttribute('aria-current');});
   paint(study,'--sun-opacity',clamp((progress-.45)*2),'',blend);
   paint(study,'--sun-x',-progress*130,'px',blend);
   paint(study,'--sun-position',80-progress*50,'%',blend);
@@ -77,7 +77,7 @@
  function configure(){
   lastTime=0;
   if(reduced.matches){values.forEach((data,el)=>data.forEach((_,key)=>el.style.removeProperty(key)));values.clear();}
-  if(reduced.matches){portrait.style.removeProperty('--portrait-y');[plan,volume,site].forEach(el=>{el.style.removeProperty('opacity');el.style.removeProperty('transform');});interests.forEach(el=>el.style.removeProperty('--interest-y'));milestones.forEach(el=>el.style.removeProperty('--milestone-progress'));phase.textContent='Spatial study';}
+  if(reduced.matches){portrait.style.removeProperty('--portrait-y');[plan,volume,site].forEach(el=>{el.style.removeProperty('opacity');el.style.removeProperty('transform');});interests.forEach(el=>el.style.removeProperty('--interest-y'));milestones.forEach(el=>el.style.removeProperty('--milestone-progress'));}
   schedule();
  }
  window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});window.addEventListener('portfolio:entered',schedule);window.addEventListener('pageshow',schedule);

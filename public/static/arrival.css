@@ -28,3 +28,12 @@ html.is-loading .arrival {background:#f0ebe6;color:#4f4742;}
 @media(max-width:650px) {.arrival {padding:24px;gap:14px;}.arrival__center {grid-template-columns:1fr;gap:12px;}.arrival__title {font-size:clamp(37px,10vw,58px);max-width:none;}.arrival__eyebrow {margin-bottom:12px;}.arrival__drawing {max-width:240px;}.arrival__drawing svg {max-height:23svh;}.arrival__number {font-size:64px;}.arrival__edition {max-width:110px;}.arrival__meta>span {max-width:150px;}}
 @media(max-height:600px) {.arrival__center {grid-template-columns:1.3fr 1fr;}.arrival__title {font-size:36px;}.arrival__drawing {max-width:190px;}.arrival__drawing svg {max-height:23svh;}.arrival__eyebrow {margin-bottom:10px;}.arrival__number {font-size:46px;}.arrival {padding:16px 24px;gap:10px;}}
 @media(prefers-reduced-motion:reduce) {.arrival,.arrival--ready,.arrival__slab,.arrival__drawing svg {transition:none;transform:none;}.arrival--ready {clip-path:none;}}
+
+/* Preparation feedback must fit narrow phones without covering their full width. */
+.hero-preparation>span:first-child {min-width:0;overflow-wrap:anywhere;}
+.hero-preparation__percent {order:1;white-space:nowrap;font-variant-numeric:tabular-nums;color:#756658;}
+.hero-preparation>button {order:2;flex-shrink:0;}
+@media(max-width:480px) {
+ .hero-preparation {left:12px;bottom:max(12px,env(safe-area-inset-bottom));max-width:calc(100vw - 24px);flex-wrap:wrap;gap:4px 12px;padding:10px 14px;}
+ .hero-preparation>span:first-child {flex:1 1 170px;}
+}

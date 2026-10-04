@@ -103,3 +103,6 @@
  .spatial-ribbon > div {transform:translateX(-4vw);}.spatial-study__form {transform:translate(-50%,-50%) rotateX(58deg) rotateZ(-28deg);}
  .project-panel .round-arrow {transition:none;}.project-chapter {position:relative;}
 }
+/* Direct section links should land below the fixed header. */
+.home-story [id] {scroll-margin-top:110px;}
+@media(max-width:650px) {.home-story [id] {scroll-margin-top:85px;}}

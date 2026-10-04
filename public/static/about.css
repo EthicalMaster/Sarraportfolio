@@ -180,3 +180,9 @@
 .ap-portrait__frame {position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#d8c9b7;border-radius:var(--portrait-radius,180px) var(--portrait-radius,180px) 12px 12px;}
 .ap-portrait__frame img {position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;object-fit:cover;object-position:50% 38%;border-radius:0;}
 @media(max-width:650px) {.ap-portrait {max-width:300px;}.ap-portrait__frame {border-radius:130px 130px 12px 12px;}}
+
+/* Keep anchored study text clear of both sticky navigation rows. */
+.ap-thought[id] {scroll-margin-top:155px;}
+.ap-socials>* {min-width:0;overflow-wrap:anywhere;}
+.ap-connect__links .text-link,.ap-socials a {min-height:44px;display:flex;align-items:center;}
+@media(max-width:650px) {.ap-thought[id] {scroll-margin-top:135px;}.ap-socials {grid-template-columns:1fr;gap:8px;}}
