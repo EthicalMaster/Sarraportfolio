@@ -10,11 +10,10 @@ export const site = {
   tagline: 'Architecture · Interior · Visualization',
   location: 'Indore, Madhya Pradesh, India',
   email: 'sarraburhanuddinsaifee@gmail.com',
-  phone: '+91 9893697462',
   year: 2026,
   social: [
-    { label: 'Instagram', href: '' },
-    { label: 'LinkedIn', href: '' },
+    { label: 'Instagram · Arven Architects', href: 'https://www.instagram.com/arven_architects/' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sarra-saifee-21809a22b' },
   ],
 }
 
