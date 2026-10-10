@@ -1,15 +1,15 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
-import { Ph, WorkCard } from './components'
+import { Ph } from './components'
 import { site } from './data/site'
 import { profile } from './data/profile'
 import { AboutPage } from './about-page'
 import { ContactPage } from './contact-page'
+import { WorkPage, ProjectPage } from './work-pages'
 import {
   allProjects,
   featuredProjects,
   projectBySlug,
-  adjacentProjects,
 } from './data/projects'
 import type { Project } from './data/projects'
 
@@ -152,177 +152,12 @@ app.get('/', (c) => {
 /* ==========================================================================
    WORK INDEX
    ========================================================================== */
-app.get('/work', (c) => {
-  const projects = allProjects()
-  return c.render(
-    <>
-      <section class="phead" aria-label="Work index">
-        <div class="wrap">
-          <p class="marker" data-reveal>
-            <span class="idx">—</span>
-            <span>Portfolio · <span data-results-count role="status" aria-live="polite" aria-atomic="true">{projects.length} projects</span></span>
-          </p>
-          <h1 class="display" data-reveal data-reveal-delay="1" style="margin-top:var(--sp-3)">
-            Work
-          </h1>
-          <p class="measure" data-reveal data-reveal-delay="2">
-            A selection of architecture and interior projects across academic and professional work. Filter by
-            discipline or track.
-          </p>
+app.get('/work', (c) => c.render(<WorkPage />, { title: 'Work', description: 'Architectural studies, interior explorations and project stories by Sarra Saifee.' }))
 
-          <div class="filters" data-filters aria-label="Filter projects">
-            <button type="button" class="is-active" aria-pressed="true" data-filter-type="discipline" data-filter-value="all">All disciplines</button>
-            <button type="button" aria-pressed="false" data-filter-type="discipline" data-filter-value="architecture">Architecture</button>
-            <button type="button" aria-pressed="false" data-filter-type="discipline" data-filter-value="interior">Interior</button>
-            <span style="width:1px;background:var(--line);margin:0 0.4rem"></span>
-            <button type="button" class="is-active" aria-pressed="true" data-filter-type="track" data-filter-value="all">All tracks</button>
-            <button type="button" aria-pressed="false" data-filter-type="track" data-filter-value="professional">Professional</button>
-            <button type="button" aria-pressed="false" data-filter-type="track" data-filter-value="academic">Academic</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" style="padding-top:0" aria-label="Projects">
-        <div class="wrap">
-          <div class="work-empty" data-filter-empty hidden>
-            <h2>No projects match these filters.</h2>
-            <p>Try another discipline or track, or view all projects.</p>
-            <button type="button" data-filter-reset>Reset filters</button>
-          </div>
-          <div class="grid" data-grid>
-            {projects.map((p, i) => (
-              <WorkCard project={p} wide={i % 5 === 0} />
-            ))}
-          </div>
-        </div>
-      </section>
-    </>,
-    { title: 'Work', description: 'Selected architecture and interior projects.' },
-  )
-})
-
-/* ==========================================================================
-   PROJECT DETAIL
-   ========================================================================== */
 app.get('/work/:slug', (c) => {
-  const slug = c.req.param('slug')
-  const project = projectBySlug(slug)
+  const project = projectBySlug(c.req.param('slug'))
   if (!project) return c.notFound()
-  const { prev, next } = adjacentProjects(slug)
-
-  return c.render(
-    <>
-      <article aria-label={project.title}>
-        {/* Persistent return control — always available near the top */}
-        <div class="detail__back">
-          <div class="wrap">
-            <a class="backlink" href="/work">
-              <span class="arrow" aria-hidden="true">←</span> Back to Projects
-            </a>
-          </div>
-        </div>
-
-        {/* HERO — spatial, cropping cover with an art-directed title block */}
-        <section class="detail__hero">
-          <div class="frame" data-hero-media>
-            <Ph src={project.coverImage} alt={`${project.title} — cover`} eager ratio="16 / 9" />
-          </div>
-          <div class="scrim" aria-hidden="true"></div>
-          <div class="detail__strip" aria-hidden="true">
-            <span>{pad(project.order)} / {pad(allProjects().length)}</span>
-            <span>{project.location}</span>
-            <span>{project.year}</span>
-          </div>
-          <div class="detail__heroinfo">
-            <div class="wrap" style="padding-inline:0">
-              <p class="num line" data-reveal-delay="1">
-                <span>{project.category}</span>
-              </p>
-              <h1 class="display">
-                <span class="line" data-reveal-delay="1">
-                  <span>{project.title}</span>
-                </span>
-              </h1>
-            </div>
-          </div>
-        </section>
-
-        <div class="wrap">
-          {/* SPECS */}
-          <div class="detail__specs">
-            <div class="spec" data-reveal>
-              <span>Year</span>
-              <strong>{project.year}</strong>
-            </div>
-            <div class="spec" data-reveal data-reveal-delay="1">
-              <span>Location</span>
-              <strong>{project.location}</strong>
-            </div>
-            <div class="spec" data-reveal data-reveal-delay="2">
-              <span>Discipline</span>
-              <strong style="text-transform:capitalize">{project.discipline}</strong>
-            </div>
-            <div class="spec" data-reveal data-reveal-delay="3">
-              <span>Track</span>
-              <strong style="text-transform:capitalize">{project.track}</strong>
-            </div>
-          </div>
-
-          {/* STATEMENT */}
-          <div class="detail__statement">
-            <p class="lead" data-reveal>
-              {project.description}
-            </p>
-            <div class="body" data-reveal data-reveal-delay="1">
-              <p style="margin-bottom:1.4rem">{project.statement}</p>
-              {project.facts && (
-                <dl style="display:grid;gap:0.6rem;border-top:1px solid var(--line);padding-top:1.4rem">
-                  {project.facts.map((f) => (
-                    <div style="display:flex;justify-content:space-between;gap:1rem;color:var(--text-lo);font-size:var(--step--1);letter-spacing:0.08em;text-transform:uppercase">
-                      <dt>{f.label}</dt>
-                      <dd style="color:var(--text-mid)">{f.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
-            </div>
-          </div>
-
-          {/* GALLERY — editorial, data-driven spans */}
-          <div class="gallery" aria-label="Project gallery">
-            {project.gallery.map((g) => (
-              <figure class="gitem" data-span={g.span || 'full'} data-reveal>
-                <Ph
-                  src={g.src}
-                  alt={g.alt}
-                  ratio={g.ratio}
-                  clip
-                  lightbox
-                  parallax={g.span === 'full' ? 0.05 : 0}
-                />
-                {g.caption && <figcaption class="cap">{g.caption}</figcaption>}
-              </figure>
-            ))}
-          </div>
-        </div>
-
-        {/* PREV / NEXT — moving to the next space */}
-        <nav class="pnav" aria-label="Project navigation">
-          <a class="prev" href={`/work/${prev?.slug}`}>
-            <p class="dir mono"><span class="arrow" aria-hidden="true">←</span> Previous</p>
-            <p class="pnum mono">{prev ? pad(prev.order) : ''}</p>
-            <p class="name display">{prev?.title}</p>
-          </a>
-          <a class="next" href={`/work/${next?.slug}`}>
-            <p class="dir mono">Next <span class="arrow" aria-hidden="true">→</span></p>
-            <p class="pnum mono">{next ? pad(next.order) : ''}</p>
-            <p class="name display">{next?.title}</p>
-          </a>
-        </nav>
-      </article>
-    </>,
-    { title: project.title, description: project.description },
-  )
+  return c.render(<ProjectPage project={project} />, { title: project.title, description: project.description })
 })
 
 /* ==========================================================================
@@ -339,6 +174,7 @@ app.get('/contact', (c) => c.render(<ContactPage />, { title: 'Contact', descrip
    404
    ========================================================================== */
 app.notFound((c) => {
+  c.status(404)
   return c.render(
     <section class="phead section" style="min-height:70svh;display:flex;align-items:center">
       <div class="wrap">

@@ -646,18 +646,31 @@ ${body}
    * 5. LIGHTBOX — native dialog supplies modal focus containment and Escape.
    * ------------------------------------------------------------------ */
   function initLightbox() {
-    const items = document.querySelectorAll('[data-lightbox]');
+    const items = [...document.querySelectorAll('[data-lightbox]')];
     if (!items.length) return;
     const box = document.createElement('dialog');
     box.className = 'lightbox';
     box.setAttribute('aria-label', 'Project image viewer');
-    box.innerHTML = '<button type="button" class="lightbox__close" aria-label="Close image viewer">Close ✕</button><div class="lightbox__stage"></div>';
+    box.innerHTML = '<button type="button" class="lightbox__close" aria-label="Close image viewer">Close ✕</button><div class="lightbox__stage"></div><div class="lightbox__toolbar"><button type="button" data-previous aria-label="Previous image">←</button><div class="lightbox__info" aria-live="polite"><span data-count></span><span class="lightbox__caption"></span></div><button type="button" data-next aria-label="Next image">→</button></div>';
     document.body.appendChild(box);
     const stage = box.querySelector('.lightbox__stage');
     const closeButton = box.querySelector('.lightbox__close');
-    let opener = null;
-    let previousOverflow = '';
-
+    let opener = null, previousOverflow = '', current = 0;
+    function render(index) {
+      current = (index + items.length) % items.length;
+      const item = items[current], image = document.createElement('div');
+      image.className = 'ph';
+      const parts = (item.getAttribute('data-ratio') || '3 / 2').split('/').map(Number);
+      const ratio = parts.length === 2 ? parts[0] / parts[1] : parts[0];
+      image.style.setProperty('--image-ratio', String(Number.isFinite(ratio) && ratio > 0 ? ratio : 1.5));
+      image.setAttribute('data-ph', item.getAttribute('data-ph'));
+      image.setAttribute('role', 'img');
+      image.setAttribute('aria-label', item.getAttribute('data-image-alt') || 'Project image');
+      stage.replaceChildren(image);
+      resolvePlaceholder(image);
+      box.querySelector('[data-count]').textContent = `${current + 1} / ${items.length}`;
+      box.querySelector('.lightbox__caption').textContent = item.getAttribute('data-image-alt') || 'Project image';
+    }
     box.addEventListener('close', () => {
       box.classList.remove('is-open');
       document.documentElement.style.overflow = previousOverflow;
@@ -666,31 +679,22 @@ ${body}
       opener = null;
     });
     closeButton.addEventListener('click', () => box.close());
-    box.addEventListener('click', (event) => {
-      if (event.target === box) box.close();
-    });
-
-    items.forEach((item) => {
-      // Native buttons activate with Enter and Space as well as pointer input.
-      item.addEventListener('click', () => {
-        if (box.open) return;
-        opener = item;
-        previousOverflow = document.documentElement.style.overflow;
-        const image = document.createElement('div');
-        image.className = 'ph';
-        image.style.width = 'min(90vw, 1400px)';
-        image.style.aspectRatio = item.getAttribute('data-ratio') || '3 / 2';
-        image.setAttribute('data-ph', item.getAttribute('data-ph'));
-        image.setAttribute('role', 'img');
-        image.setAttribute('aria-label', item.getAttribute('data-image-alt') || 'Project image');
-        stage.replaceChildren(image);
-        resolvePlaceholder(image);
-        box.classList.add('is-open');
-        box.showModal();
-        document.documentElement.style.overflow = 'hidden';
-        closeButton.focus();
-      });
-    });
+    box.addEventListener('click', event => { if(event.target === box) box.close(); });
+    box.querySelector('[data-previous]').addEventListener('click', () => render(current - 1));
+    box.querySelector('[data-next]').addEventListener('click', () => render(current + 1));
+    box.addEventListener('keydown', event => {if(event.key === 'ArrowLeft' || event.key === 'ArrowRight'){event.preventDefault();render(current + (event.key === 'ArrowLeft' ? -1 : 1));}});
+    let touch = null;
+    stage.addEventListener('touchstart', event => {touch=event.touches.length===1 ? {x:event.touches[0].clientX,y:event.touches[0].clientY} : null;},{passive:true});
+    stage.addEventListener('touchend', event => {if(!touch)return;const dx=event.changedTouches[0].clientX-touch.x,dy=event.changedTouches[0].clientY-touch.y;if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5)render(current+(dx<0?1:-1));touch=null;},{passive:true});
+    stage.addEventListener('touchcancel',()=>{touch=null;},{passive:true});
+    items.forEach((item,index) => item.addEventListener('click', () => {
+      if (box.open) return;
+      opener = item;
+      previousOverflow = document.documentElement.style.overflow;
+      render(index);
+      box.classList.add('is-open');box.showModal();
+      document.documentElement.style.overflow = 'hidden';closeButton.focus();
+    }));
   }
 
   /* ------------------------------------------------------------------ *
