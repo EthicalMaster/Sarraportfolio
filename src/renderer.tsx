@@ -1,3 +1,4 @@
+import { navigationBootstrap } from './navigation-bootstrap'
 import { jsxRenderer, useRequestContext } from 'hono/jsx-renderer'
 import { site } from './data/site'
 
@@ -30,7 +31,7 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
         <meta property="og:description" content={desc} />
         <meta property="og:type" content="website" />
         {/* Tiny fail-open bootstrap: never leave the site behind a failed loader. */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var r=document.documentElement;try{if(location.pathname!=='/'&&sessionStorage.getItem('sarra-entered'))return;}catch(e){}r.classList.add('is-loading');window.setTimeout(function(){if(!r.classList.contains('is-loading'))return;window.dispatchEvent(new Event('portfolio:skip'));r.classList.remove('is-loading');document.querySelectorAll('[data-loader-inert]').forEach(function(e){e.inert=false;});window.dispatchEvent(new Event('portfolio:entered'));},8000);})();` }} />
+        <script dangerouslySetInnerHTML={{ __html: navigationBootstrap }} />
         <style dangerouslySetInnerHTML={{ __html: `.arrival{display:none}html.is-loading{overflow:hidden}html.is-loading .arrival{display:flex;position:fixed;inset:0;z-index:10000;background:#f0ebe6;color:#4f4742}html:not(.js-ready) .hero-video-wrap{height:auto}` }} />
         {/* Fonts: preconnect + display=swap keeps first paint fast */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

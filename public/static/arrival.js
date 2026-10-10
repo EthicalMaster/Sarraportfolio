@@ -40,7 +40,6 @@
   }
   function finish(fallback=false){
    if(done)return;done=true;clearTimeout(timeout);
-   try{sessionStorage.setItem('sarra-entered','1');}catch{}
    if(!active){restore();return;}
    // A slow connection exits at its measured percentage, never a false 100%.
    if(!fallback){target=100;status.textContent=limited?'Ready to explore · still view':'Ready to explore';}
@@ -99,7 +98,7 @@
   }
   if(video&&!limited){video.addEventListener('loadeddata',mediaReady);video.addEventListener('canplay',mediaReady);video.addEventListener('error',mediaFailed);retry.addEventListener('click',prepareVideo);prepareVideo();}
   // Longer downloads continue behind the page; the opening never traps a visitor.
-  timeout=setTimeout(()=>finish(true),6500);if(active)raf=requestAnimationFrame(paint);update();
+  if(active){timeout=setTimeout(()=>finish(true),6500);raf=requestAnimationFrame(paint);update();}else finish();
   window.addEventListener('pagehide',e=>{finish(true);restore();if(!e.persisted){controller?.abort();clearTimeout(mediaTimer);if(objectUrl)URL.revokeObjectURL(objectUrl);}});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();

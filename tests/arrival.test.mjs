@@ -6,8 +6,8 @@ class Element extends EventTarget {
  constructor(tag='DIV'){super();this.tagName=tag;this.children=[];this.dataset={};this.attrs={};this.inert=false;this.hidden=false;this.style={setProperty(){}};const classes=new Set();this.classList={add:x=>classes.add(x),remove:x=>classes.delete(x),contains:x=>classes.has(x)};}
  setAttribute(k,v){this.attrs[k]=v;} removeAttribute(k){delete this.attrs[k];}append(...els){this.children.push(...els);}contains(el){return this.children.includes(el);}focus(){}remove(){this.removed=true;}pause(){}getBoundingClientRect(){return {top:0,bottom:200};}
 }
-async function setup({reduced=false,saveData=false,hasVideo=true,contentLength=true}={}){
- const root=new Element(),overlay=new Element(),body=new Element(),main=new Element(),window=new EventTarget();root.classList.add('is-loading');root.classList.add('js-ready');
+async function setup({reduced=false,saveData=false,hasVideo=true,contentLength=true,active=true}={}){
+ const root=new Element(),overlay=new Element(),body=new Element(),main=new Element(),window=new EventTarget();if(active)root.classList.add('is-loading');root.classList.add('js-ready');
  const parts=Object.fromEntries(['number','progress','status','skip','phase'].map(k=>[k,new Element()]));overlay.children=Object.values(parts);overlay.querySelector=s=>parts[s.match(/data-arrival-(.+)\]/)[1]];
  const video=hasVideo?new Element('VIDEO'):null;if(video){video.dataset.src='/film.mp4';video.readyState=0;video.load=()=>{};}
  body.append(overlay,main);const image=new Element('IMG');image.complete=true;image.decode=()=>Promise.resolve();
@@ -38,4 +38,8 @@ for(const options of [{reduced:true},{saveData:true},{hasVideo:false}]){const t=
 }
 {
  const t=await setup({contentLength:false});await t.deliver();await t.decode();await t.advance(700);assert.equal(t.video.dataset.prepared,'true');console.log('Missing Content-Length: completion works without inventing download percentages.');
+}
+
+{
+ const t=await setup({active:false});assert.ok(t.overlay.removed);assert.equal(t.main.inert,false);assert.equal(t.requests.length,1);assert.equal(t.requests[0].options.signal.aborted,false);await t.deliver();await t.decode();assert.equal(t.video.dataset.prepared,'true');assert.equal(t.chip().hidden,true);console.log('Internal navigation: immediate entry, background video transfer and decoded readiness preserved.');
 }
