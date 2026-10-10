@@ -1,3 +1,4 @@
+import { existingProjectDrafts } from './admin/project-import'
 import { AdminPage, AdminUnavailable } from './admin/page'
 import { Hono } from 'hono'
 import { renderer } from './renderer'
@@ -17,6 +18,13 @@ import type { Project } from './data/projects'
 const app = new Hono()
 
 // Preview editor never exposes content or editing routes in a production build.
+app.get('/admin/starter-projects', c => {
+  c.header('Cache-Control', 'no-store')
+  c.header('X-Robots-Tag', 'noindex, nofollow')
+  if (!import.meta.env.DEV) return c.json({ error: 'Local preview only' }, 404)
+  return c.json({ projects: existingProjectDrafts() })
+})
+
 app.get('/admin', c => {
   c.header('Cache-Control', 'no-store')
   c.header('X-Robots-Tag', 'noindex, nofollow')

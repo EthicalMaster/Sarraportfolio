@@ -50,3 +50,26 @@ is outstanding because the remote review browser cannot reach the local dev serv
 - Test unauthorised access, account recovery, quota errors, publishing rollback, and backups.
 
 Do not describe this first-stage preview as a secure online dashboard or a completed CMS.
+
+## Replacing the initial sample projects
+
+Choose **Import existing projects** on the Projects screen. This copies the eight
+public sample slots into editable local drafts, retaining their ordering, featured
+selection, category, facts and text. Generated placeholder artwork is intentionally
+not copied: add actual covers and project images in the editor.
+
+A replacement draft records its original `sourceSlug`, separately from its editable
+new title and proposed URL name. This will let the future publishing layer replace
+that slot instead of adding a ninth project. Renaming a draft does not lose the link.
+The final publishing implementation must also handle redirects if its URL changes.
+
+Import is additive and repeat-safe: edited or archived replacement drafts are not
+reset. **Start with blank content** clears a draft's text and images while preserving
+its slot assignment. Otherwise edit the sample content and use **Mark sample details
+replaced** after reviewing it. Both require Save draft to persist the changes.
+
+Copies do not inherit replacement assignments. Backup imports retain a source
+assignment only when no other local draft already owns that slot; conflicting copies
+are detached. Export backups before moving devices or clearing browser storage.
+Saving a draft still does not change any public page. Secure storage and live
+publishing remain the next implementation stage.
