@@ -49,3 +49,13 @@ MFA UI, publishing and private preview links are not provisioned in this change.
 Do not call the project-management backend complete or ask the owner to enter real
 project content without retaining backups. Account recovery and rate-limit settings
 must be verified as part of provisioning rather than guessed.
+
+## Provisioning checkpoint
+
+Project `wmsvczaxzfmpbtpizeuh` now contains the initial protected studio tables
+and private `studio-drafts` bucket. Approved-editor membership is empty until
+Sarra's confirmed Auth account exists. RLS is enabled on all three studio tables;
+anonymous clients cannot read draft rows and authenticated clients cannot insert
+their own editor membership. See studio-schema.sql for the applied SQL.
+Cloud data/upload routes and UI synchronisation are still pending; creating these
+tables has not moved any browser drafts or enabled publishing.
