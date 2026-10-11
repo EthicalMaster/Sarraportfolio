@@ -12,10 +12,10 @@ const {default:handler}=await import('../.vercel/output/functions/__hono.func/in
 const server=createServer(handler);await new Promise(r=>server.listen(0,'127.0.0.1',r));
 try{const base=`http://127.0.0.1:${server.address().port}`;const r=await fetch(base+'/admin',{redirect:'manual'});assert.equal(r.status,303);const login=await fetch(base+'/admin/login');const html=await login.text();assert.ok(html.includes('Account setup is pending'));assert.ok(!html.includes('/static/admin.js'));const seed=await fetch(base+'/admin/starter-projects');assert.equal(seed.status,503);assert.ok(!(await seed.text()).includes('sourceSlug'));const blocked=await fetch(base+'/admin/login',{method:'POST',headers:{Origin:'https://other.test'}});assert.equal(blocked.status,403);}finally{await new Promise(r=>server.close(r))}
 const nodes=new Map(),listeners={};const node=s=>{if(!nodes.has(s))nodes.set(s,{innerHTML:'',textContent:'',style:{},addEventListener(){},focus(){},showModal(){},value:'full'});return nodes.get(s)};
-let failSave=false,written;
+let failSave=false,written,appliedSelection;
 const source=readFileSync(new URL('../public/static/admin.js',import.meta.url),'utf8');
-const code=source.slice(0,source.lastIndexOf("workspace.innerHTML='<p class="))+"globalThis.studioTest={newProject,save,validateBackup,preview,importExisting,renderEditor,setStep:n=>editorStep=n,current:()=>current,projects:()=>projects,dirty:()=>dirty};})();";
-const context={document:{querySelector:node,addEventListener:(k,fn)=>listeners[k]=fn},window:{addEventListener(){}},fetch:async(url,options={})=>{if(url==='/admin/starter-projects')return {ok:true,json:async()=>({projects:structuredClone(starterProjects)})};if(failSave)return {ok:false,json:async()=>({error:'Connection lost'})};const list=JSON.parse(options.body).projects;written=structuredClone(list[0]);return {ok:true,json:async()=>({projects:list.map(p=>({...p,cloudRevision:(p.cloudRevision||0)+1}))})};},crypto:{randomUUID},structuredClone,setTimeout:()=>1,clearTimeout(){},console};
+const code=source.slice(0,source.lastIndexOf("workspace.innerHTML='<p class="))+"globalThis.studioTest={newProject,save,validateBackup,preview,importExisting,renderEditor,setStep:n=>editorStep=n,configureHome:()=>{view='selection';current=null;dirty=false;homeData={projects:['a','b','c','d','e'].map(slug=>({slug,title:slug,sample:false}))};homeSelected=['a','b','c','d']},selected:()=>homeSelected,current:()=>current,projects:()=>projects,dirty:()=>dirty};})();";
+const context={document:{querySelector:node,addEventListener:(k,fn)=>listeners[k]=fn},window:{addEventListener(){}},fetch:async(url,options={})=>{if(url==='/admin/api/homepage/selection'){appliedSelection=JSON.parse(options.body).slugs;return {ok:true,json:async()=>({ok:true})};}if(url==='/admin/starter-projects')return {ok:true,json:async()=>({projects:structuredClone(starterProjects)})};if(failSave)return {ok:false,json:async()=>({error:'Connection lost'})};const list=JSON.parse(options.body).projects;written=structuredClone(list[0]);return {ok:true,json:async()=>({projects:list.map(p=>({...p,cloudRevision:(p.cloudRevision||0)+1}))})};},crypto:{randomUUID},structuredClone,setTimeout:()=>1,clearTimeout(){},console};
 vm.runInNewContext(code,context);const api=context.studioTest;
 api.newProject(true);assert.equal(api.current().sections.length,1);assert.ok(api.dirty());
 api.current().overview='Keep this text across steps';api.setStep(3);api.renderEditor();assert.ok(node('#workspace').innerHTML.includes('data-editor-step="0"'));assert.ok(node('#workspace').innerHTML.includes('04 / Project images'));api.setStep(0);api.renderEditor();assert.equal(api.current().overview,'Keep this text across steps');
@@ -28,3 +28,13 @@ await api.importExisting();assert.equal(api.projects().length,9);const existing=
 const backup={format:'sarra-studio-preview-v1',projects:[existing]};assert.equal(api.validateBackup(backup)[0].sourceSlug,undefined);
 api.newProject(true);failSave=true;await assert.rejects(api.save(),/Connection lost/);assert.ok(api.dirty());
 console.log('Admin: login gate, unconfigured denial, draft persistence, failed save recovery, escaped preview and safe backup import, existing-slot migration, repeat-import preservation and unique replacement assignments pass.');
+
+api.configureHome();
+const changed={dataset:{homeSelect:'e'},checked:true,matches:s=>s==='[data-home-select]'};
+await listeners.change({target:changed});assert.equal(changed.checked,false);assert.equal(api.selected().length,4);
+const button=(dataset,attr)=>({dataset,hasAttribute:s=>s===attr});
+await listeners.click({target:{closest:()=>button({homeOrder:'b',direction:'-1'},'')}});
+assert.deepEqual(Array.from(api.selected()),['b','a','c','d']);
+await listeners.click({target:{closest:()=>button({},'data-home-apply')}});
+assert.deepEqual(Array.from(appliedSelection),['b','a','c','d']);assert.equal(api.dirty(),false);
+console.log('Homepage selection enforces four slots and applies the chosen order without publishing project drafts.');

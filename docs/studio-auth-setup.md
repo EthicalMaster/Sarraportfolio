@@ -1,3 +1,5 @@
+> Historical setup notes: cloud storage, publishing and homepage controls are now implemented. Follow studio-cloud-guide.md for the current workflow and deployment instructions. Recovery/MFA interface work remains separate.
+
 # Private studio authentication — provisioning pending
 
 The `/admin` and `/admin/starter-projects` routes no longer have a development

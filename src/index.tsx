@@ -1,4 +1,4 @@
-import { portfolio, publicMedia } from './data/cloud-projects'
+import { portfolio, publicMedia, homepageSettings, homepageSelection } from './data/cloud-projects'
 import { studio } from './admin/routes'
 import { Hono } from 'hono'
 import { renderer } from './renderer'
@@ -29,7 +29,10 @@ const pad = (n: number) => String(n).padStart(2, '0')
    ========================================================================== */
 app.get('/', async (c) => {
   const { projects } = await portfolio(c)
-  const featured = projects.filter(p=>p.featured)
+  const home = await homepageSettings(c)
+  const featured = homepageSelection(projects,home.selected_slugs)
+  const heroVideo=home.hero_id?`/media/${home.hero_id}`:"/videos/architectural_hero_scrub.mp4"
+  const heroPoster=home.poster_id?`/media/${home.poster_id}`:"/videos/architectural_hero_poster.jpg"
   const count = projects.length
   return c.render(
     <>
@@ -43,8 +46,8 @@ app.get('/', async (c) => {
             <video
               class="hero__video-el"
               data-hero-video
-              data-src="/videos/architectural_hero_scrub.mp4"
-              poster="/videos/architectural_hero_poster.jpg"
+              data-src={heroVideo}
+              poster={heroPoster}
               muted
               playsinline
               preload="none"
@@ -54,7 +57,7 @@ app.get('/', async (c) => {
 
           {/* Original placeholder image — fallback while video loads */}
           <div class="hero__media" data-hero-media>
-            <img src="/videos/architectural_hero_poster.jpg" alt="Architectural site at sunset" width="1280" height="720" fetchpriority="high" decoding="async" />
+            <img src={heroPoster} alt="Architecture portfolio film still" width="1280" height="720" fetchpriority="high" decoding="async" />
           </div>
           <div class="hero__scrim" aria-hidden="true"></div>
 

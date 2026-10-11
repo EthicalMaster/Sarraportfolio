@@ -1,11 +1,12 @@
+import {portfolio,homepageSettings,homepageSelection} from '../data/cloud-projects'
 import { Hono } from 'hono'
 import { createAuth, authConfig } from './auth'
 import { validateDraft, imageList, publicationErrors } from './cloud-model'
 const bucket='studio-drafts'
-export function uploadMatches(info:any,bytes:number){
+export function uploadMatches(info:any,bytes:number,video=false){
  const size=info?.size??info?.metadata?.size;
  const type=info?.contentType??info?.metadata?.mimetype;
- return Number.isSafeInteger(size)&&size===bytes&&['image/webp','image/jpeg','image/png'].includes(type);
+ return Number.isSafeInteger(size)&&size===bytes&&(video?['video/mp4']:['image/webp','image/jpeg','image/png']).includes(type);
 }
 const uuid=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i
 export const cloud=new Hono()
@@ -39,7 +40,7 @@ cloud.post('/upload/:id/complete',async c=>{
  const db=client(c),asset=await db.from('studio_assets').select('*').eq('id',id).single()
  if(asset.error)return c.json({error:'Upload not found'},404)
  const info=await db.storage.from(bucket).info(asset.data.object_path)
- if(info.error||!uploadMatches(info.data,asset.data.byte_size))return c.json({error:'Upload is incomplete or its format is invalid'},409)
+ if(info.error||!uploadMatches(info.data,asset.data.byte_size,asset.data.object_path.endsWith('.mp4')))return c.json({error:'Upload is incomplete or its format is invalid'},409)
  const changed=await db.from('studio_assets').update({ready:true}).eq('id',id)
  if(changed.error)return c.json({error:'Could not finish upload'},503)
  return c.json({src:`/media/${id}`,id})
@@ -81,3 +82,31 @@ export async function privateMedia(c:any){
  const signed=await db.storage.from(bucket).createSignedUrl(asset.data.object_path,300)
  return signed.error?c.notFound():c.redirect(signed.data.signedUrl,302)
 }
+
+cloud.get('/homepage',async c=>{
+ const [content,settings]=await Promise.all([portfolio(c),homepageSettings(c)]);
+ return c.json({settings,selected:homepageSelection(content.projects,settings.selected_slugs).map(p=>p.slug),projects:content.projects.map(p=>({slug:p.slug,title:p.title,cover:p.coverImage,sample:!p.studio}))});
+});
+cloud.post('/homepage/selection',async c=>{
+ const {slugs}=await c.req.json();
+ if(!Array.isArray(slugs)||slugs.length>4||slugs.some(s=>typeof s!=='string')||new Set(slugs).size!==slugs.length)return c.json({error:'Choose up to four different projects.'},400);
+ const {projects}=await portfolio(c);
+ if(slugs.some(s=>!projects.some(p=>p.slug===s)))return c.json({error:'A selected project is no longer published. Reload this page.'},409);
+ const result=await client(c).from('studio_homepage').update({selected_slugs:slugs}).eq('id',true);
+ return result.error?c.json({error:'Could not save homepage selection'},503):c.json({ok:true});
+});
+cloud.post('/hero/upload',async c=>{
+ const p=await c.req.json();
+ if(p.type!=='video/mp4'||!Number.isSafeInteger(p.bytes)||p.bytes<1||p.bytes>41943040||!Number.isFinite(p.duration)||p.duration<2||p.duration>30||!Number.isInteger(p.width)||!Number.isInteger(p.height)||p.width<1||p.height<1||p.width>1920||p.height>1920)return c.json({error:'Use an MP4, 2–30 seconds, up to 40 MB and 1920 pixels on either edge.'},400);
+ const id=crypto.randomUUID(),path=id+'.mp4',db=client(c);
+ const record=await db.from('studio_assets').insert({id,object_path:path,width:p.width,height:p.height,byte_size:p.bytes});
+ if(record.error)return c.json({error:'Could not prepare video upload'},503);
+ const {data,error}=await db.storage.from(bucket).createSignedUploadUrl(path,{upsert:false});
+ return error?c.json({error:'Could not prepare video upload'},503):c.json({id,url:data.signedUrl});
+});
+cloud.post('/homepage/hero',async c=>{
+ const {video,poster}=await c.req.json();
+ if(!((video===null&&poster===null)||(typeof video==='string'&&uuid.test(video)&&typeof poster==='string'&&uuid.test(poster))))return c.json({error:'Invalid video selection'},400);
+ const {error}=await client(c).rpc('studio_set_hero',{video,poster});
+ return error?c.json({error:'Video could not be applied. Upload it again and retry.'},409):c.json({ok:true});
+});

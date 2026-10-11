@@ -11,8 +11,10 @@ try{
  assert.ok(!uploadMatches(actualSDKResponse.data,21155),'Reject mismatched byte count');
  assert.ok(!uploadMatches({...actualSDKResponse.data,contentType:'text/html'},21154),'Reject unsupported MIME');
  assert.ok(!uploadMatches(null,21154),'Reject missing upload');
+ assert.ok(uploadMatches({size:100,contentType:'video/mp4'},100,true));assert.ok(!uploadMatches({size:100,contentType:'video/mp4'},100,false));
+ assert.ok(!uploadMatches({size:100,contentType:'image/jpeg'},100,true));
  const {validateDraft,publicationErrors}=await server.ssrLoadModule('/src/admin/cloud-model.ts');
- const {mergePublications}=await server.ssrLoadModule('/src/data/cloud-projects.ts');
+ const {mergePublications,homepageSelection}=await server.ssrLoadModule('/src/data/cloud-projects.ts');
  const {existingProjectDrafts}=await server.ssrLoadModule('/src/admin/project-import.ts');
  const {ProjectPage}=await server.ssrLoadModule('/src/work-pages.tsx');
  const seed=existingProjectDrafts()[0],id='12345678-1234-1234-1234-123456789abc';
@@ -24,6 +26,11 @@ try{
  assert.throws(()=>validateDraft({...draft,sections:[{...draft.sections[0],images:Array(40).fill(draft.cover)}]}));
  const published={project_id:seed.id,source_slug:seed.sourceSlug,slug:'real-building',active:true,document:safe};
  const merged=mergePublications([published]);assert.equal(merged.length,8);assert.ok(!merged.some(p=>p.slug===seed.sourceSlug));assert.equal(merged.find(p=>p.slug==='real-building').title,'Real building');
+ assert.deepEqual(homepageSelection(merged,[]),[]);
+ assert.equal(homepageSelection(merged,[seed.sourceSlug])[0].slug,'real-building');
+ const chosen=[merged[2].slug,merged[0].slug];assert.deepEqual(homepageSelection(merged,chosen).map(p=>p.slug),chosen);
+ assert.equal(homepageSelection(merged,['missing-slug']).length,0);
+ assert.ok(homepageSelection(merged,null).length<=4);
  const archived=mergePublications([{...published,active:false,document:null}]);assert.equal(archived.length,7);assert.ok(!archived.some(p=>p.slug===seed.sourceSlug));
  const html=(await ProjectPage({project:merged.find(p=>p.slug==='real-building'),projects:merged}).toString());assert.ok(html.includes('Ground-floor plan'));assert.ok(html.includes('data-drawing'));assert.ok(!html.includes('Sample project ·'));assert.ok(!html.includes('study-6'));
  const {default:app}=await server.ssrLoadModule('/src/index.tsx');

@@ -5,3 +5,5 @@
 
 /* Guided project entry: preserve values while displaying one step at a time. */
 [hidden]{display:none!important}.editor-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 24px}.editor-steps .button{justify-content:flex-start;gap:12px}.editor-steps span{opacity:.65;font-size:11px}.editor-steps [aria-current="step"]{background:var(--ink,#4e4741);color:#fff}.step-actions{display:flex;justify-content:space-between;gap:12px;margin:20px 0}.optional-fields summary,.image-options summary{cursor:pointer;padding:12px 0;font-size:14px}.optional-fields[open] summary,.image-options[open] summary{margin-bottom:12px}.image-fields>div{min-width:0}.image-options{width:100%}@media(max-width:600px){.editor-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.editor-steps .button{padding:12px}.step-actions .button{font-size:12px}}
+
+.hero-admin-preview{width:100%;max-height:420px;aspect-ratio:16/9;object-fit:contain;background:#252824;border-radius:4px}.selection-row p{font-size:12px;opacity:.65;margin:6px 0}.selection-row{gap:16px}

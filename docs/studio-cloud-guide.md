@@ -22,6 +22,24 @@ The upload completion check now reads the installed Storage SDK’s top-level `s
 
 Project entry now uses four steps: Basics, Cover, Story and Images. Switching steps retains working values but does not save them; use Save draft. Per-image descriptions, captions and display controls are collapsed until opened.
 
+## Homepage selection and video
+
+Homepage selection now lists publicly visible projects, including existing sample slots. Select zero to four projects, reorder the selected ones, and click Apply to homepage. This saves a dedicated homepage setting without publishing or altering any project draft. New drafts must first be published to appear in this list. The project editor no longer has a competing Feature on homepage checkbox. After an explicit selection is applied, newly published projects are added through Homepage selection.
+
+Homepage video accepts MP4 files of 2–30 seconds, no more than 40 MB and 1920 pixels on either edge. Prefer landscape H.264 around the original 10-second duration. A still image is captured automatically. Uploading remains private; preview the film and seek its timeline, then click Apply video to homepage. Restore original video switches back to the built-in film and still. Scroll layout and animation code remain unchanged and use the replacement film’s duration.
+
+The uploader does not transcode or optimize keyframe spacing. An ordinary MP4 can work, but smooth scrubbing depends on encoding and device capability. If seeking is jerky, export a version with frequent keyframes (approximately every 0.1–0.25 seconds) and keep the file small. Video upload and signed-in cross-device viewing require a hands-on check with the chosen film.
+
+The new homepage database migration is already applied. Active video/poster files are protected from unused-file cleanup; replaced uploads become cleanup candidates after two hours if unreferenced elsewhere. The current video was not replaced during implementation.
+
+## Deploy this version
+
+In Vercel project settings, ensure Production has SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and STUDIO_ALLOWED_USER_IDS with the same values used in the working local .env.local. These are not transferred by a Git push. Keep .env.local out of Git. Apply settings before deploying or redeploy after changing them.
+
+Merge the supplied feature branch into main with a fast-forward-only merge and push main. If a merge is refused, inspect the divergence instead of force-pushing. After deployment, check /admin sign-in, save/reload a draft, Apply to homepage, and the public homepage. No database SQL or new account setup is required for this bundle.
+
+The production build and nine regression test files passed. A database transaction verified that anonymous/non-editor users cannot update homepage settings, active hero media is readable, and cleanup preserves it; all test changes were rolled back. The new signed-in video upload flow was not tested using the owner's password.
+
 ## Everyday editing
 
 - **Save draft** stores private working content and prepared images in the cloud. It does not update a published snapshot.
