@@ -1,3 +1,4 @@
+import { cloud, privateMedia } from './cloud-api'
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { authConfig, createAuth, authorisedUser, sameOrigin } from './auth'
@@ -17,7 +18,8 @@ studio.use('*',async(c,next)=>{
  if(c.req.method!=='GET'&&c.req.method!=='HEAD'&&!sameOrigin(c))return c.text('Request origin not allowed',403)
  await next()
 })
-studio.use('*',bodyLimit({maxSize:8192,onError:c=>c.text('Request too large',413)}))
+studio.use('/login',bodyLimit({maxSize:8192,onError:c=>c.text('Request too large',413)}))
+studio.use('*',bodyLimit({maxSize:2097152,onError:c=>c.json({error:'Project data too large'},413)}))
 studio.get('/login',c=>c.html(<LoginPage configured={!!authConfig(c)} error={c.req.query('error')==='1'}/>))
 studio.post('/login',async c=>{
  const config=authConfig(c)
@@ -41,9 +43,12 @@ studio.post('/logout',async c=>{
 })
 studio.use('*',async(c,next)=>{
  const config=authConfig(c)
- if(!config)return c.req.path.endsWith('/starter-projects')?c.json({error:'Sign-in is not configured'},503):c.redirect('/admin/login',303)
- try{if(!await authorisedUser(createAuth(c,config),config.ids))return c.req.path.endsWith('/starter-projects')?c.json({error:'Unauthorised'},401):c.redirect('/admin/login',303)}catch{return c.text('Sign-in verification is unavailable. Please try again.',503)}
+ if(!config)return (c.req.path.includes('/api/')||c.req.path.includes('/media/')||c.req.path.endsWith('/starter-projects'))?c.json({error:'Sign-in is not configured'},503):c.redirect('/admin/login',303)
+ try{if(!await authorisedUser(createAuth(c,config),config.ids))return (c.req.path.includes('/api/')||c.req.path.includes('/media/')||c.req.path.endsWith('/starter-projects'))?c.json({error:'Unauthorised'},401):c.redirect('/admin/login',303)}catch{return c.text('Sign-in verification is unavailable. Please try again.',503)}
  await next()
 })
 studio.get('/',c=>c.html(<AdminPage/>))
 studio.get('/starter-projects',c=>c.json({projects:existingProjectDrafts()}))
+
+studio.route('/api',cloud)
+studio.get('/media/:id',privateMedia)

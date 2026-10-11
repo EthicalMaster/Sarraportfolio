@@ -1,3 +1,4 @@
+import { portfolio, publicMedia } from './data/cloud-projects'
 import { studio } from './admin/routes'
 import { Hono } from 'hono'
 import { renderer } from './renderer'
@@ -18,6 +19,7 @@ const app = new Hono()
 
 app.route('/admin', studio)
 
+app.get('/media/:id',publicMedia)
 app.use(renderer)
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -25,9 +27,10 @@ const pad = (n: number) => String(n).padStart(2, '0')
 /* ==========================================================================
    HOME
    ========================================================================== */
-app.get('/', (c) => {
-  const featured = featuredProjects()
-  const count = allProjects().length
+app.get('/', async (c) => {
+  const { projects } = await portfolio(c)
+  const featured = projects.filter(p=>p.featured)
+  const count = projects.length
   return c.render(
     <>
       {/* HERO — scroll-scrubbed architectural video experience.
@@ -105,12 +108,12 @@ app.get('/', (c) => {
 
       <section class="selected section" id="selected-work" aria-labelledby="selected-title">
         <div class="wrap">
-          <div class="editorial-heading" data-reveal><div><p class="marker"><span class="idx">02</span> Selected work</p><h2 id="selected-title" class="editorial-title">Four perspectives.<br />An evolving practice.</h2></div><a class="text-link" href="/work">Explore all {count} projects <span aria-hidden="true">↗</span></a></div>
+          <div class="editorial-heading" data-reveal><div><p class="marker"><span class="idx">02</span> Selected work</p><h2 id="selected-title" class="editorial-title">Selected perspectives.<br />An evolving practice.</h2></div><a class="text-link" href="/work">Explore all {count} projects <span aria-hidden="true">↗</span></a></div>
           <div class="project-deck" data-project-deck>
             {featured.slice(0, 4).map((p, i) => (
               <article class="project-chapter" data-project-chapter style={`--chapter-order:${i + 1}`} aria-labelledby={`project-title-${i}`}>
                 <a class="project-panel" href={`/work/${p.slug}`} aria-label={`Explore ${p.title}`}>
-                  <div class="project-panel__visual"><div class="project-panel__picture" data-project-picture><Ph src={p.coverImage} alt={`${p.title} — ${p.category}`} /></div><span class="project-panel__folio" aria-hidden="true">{pad(i + 1)}<small>/ 04</small></span><span class="project-panel__category mono">{p.category}</span></div>
+                  <div class="project-panel__visual"><div class="project-panel__picture" data-project-picture><Ph src={p.coverImage} alt={`${p.title} — ${p.category}`} /></div><span class="project-panel__folio" aria-hidden="true">{pad(i + 1)}<small>/ {pad(Math.min(featured.length,4))}</small></span><span class="project-panel__category mono">{p.category}</span></div>
                   <div class="project-panel__info"><div><p class="mono">Selected work / {pad(i + 1)}</p><h3 id={`project-title-${i}`}>{p.title}</h3><p class="project-panel__subtitle">{p.subtitle}</p></div><div class="project-panel__bottom"><span>Explore project</span><span class="round-arrow" aria-hidden="true">↗</span></div></div>
                 </a>
               </article>
@@ -155,12 +158,15 @@ app.get('/', (c) => {
 /* ==========================================================================
    WORK INDEX
    ========================================================================== */
-app.get('/work', (c) => c.render(<WorkPage />, { title: 'Work', description: 'Architectural studies, interior explorations and project stories by Sarra Saifee.' }))
+app.get('/work', async (c) => c.render(<WorkPage projects={(await portfolio(c)).projects}/>, { title: 'Work', description: 'Architectural studies, interior explorations and project stories by Sarra Saifee.' }))
 
-app.get('/work/:slug', (c) => {
-  const project = projectBySlug(c.req.param('slug'))
+app.get('/work/:slug', async (c) => {
+  const {projects,publications}=await portfolio(c)
+  const slug=c.req.param('slug')
+  const project=projects.find(p=>p.slug===slug)
+  if(!project){const redirect=publications.find(p=>p.active&&p.aliases?.includes(slug));if(redirect)return c.redirect('/work/'+redirect.slug,302)}
   if (!project) return c.notFound()
-  return c.render(<ProjectPage project={project} />, { title: project.title, description: project.description })
+  return c.render(<ProjectPage project={project} projects={projects} />, { title: project.title, description: project.description })
 })
 
 /* ==========================================================================

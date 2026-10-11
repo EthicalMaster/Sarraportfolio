@@ -651,11 +651,16 @@ ${body}
     const box = document.createElement('dialog');
     box.className = 'lightbox';
     box.setAttribute('aria-label', 'Project image viewer');
-    box.innerHTML = '<button type="button" class="lightbox__close" aria-label="Close image viewer">Close ✕</button><div class="lightbox__stage"></div><div class="lightbox__toolbar"><button type="button" data-previous aria-label="Previous image">←</button><div class="lightbox__info" aria-live="polite"><span data-count></span><span class="lightbox__caption"></span></div><button type="button" data-next aria-label="Next image">→</button></div>';
+    box.innerHTML = '<button type="button" class="lightbox__close" aria-label="Close image viewer">Close ✕</button><div class="lightbox__zoom" hidden><button type="button" data-zoom-out aria-label="Zoom out">−</button><span data-zoom-value>100%</span><button type="button" data-zoom-in aria-label="Zoom in">+</button><button type="button" data-zoom-fit>Fit</button></div><div class="lightbox__stage"></div><div class="lightbox__toolbar"><button type="button" data-previous aria-label="Previous image">←</button><div class="lightbox__info" aria-live="polite"><span data-count></span><span class="lightbox__caption"></span></div><button type="button" data-next aria-label="Next image">→</button></div>';
     document.body.appendChild(box);
     const stage = box.querySelector('.lightbox__stage');
     const closeButton = box.querySelector('.lightbox__close');
-    let opener = null, previousOverflow = '', current = 0;
+    let opener = null, previousOverflow = '', current = 0, zoom=1, fitWidth=0, drawing=false;
+    const zoomBar=box.querySelector('.lightbox__zoom');
+    function setZoom(value){zoom=Math.max(1,Math.min(6,value));const frame=stage.firstElementChild;if(!frame||!drawing)return;frame.style.width=(fitWidth*zoom)+'px';box.querySelector('[data-zoom-value]').textContent=Math.round(zoom*100)+'%';if(zoom===1){stage.scrollTop=0;stage.scrollLeft=0;}}
+    box.querySelector('[data-zoom-in]').addEventListener('click',()=>setZoom(zoom+.5));
+    box.querySelector('[data-zoom-out]').addEventListener('click',()=>setZoom(zoom-.5));
+    box.querySelector('[data-zoom-fit]').addEventListener('click',()=>setZoom(1));
     function render(index) {
       current = (index + items.length) % items.length;
       const item = items[current], image = document.createElement('div');
@@ -667,7 +672,12 @@ ${body}
       image.setAttribute('role', 'img');
       image.setAttribute('aria-label', item.getAttribute('data-image-alt') || 'Project image');
       stage.replaceChildren(image);
-      resolvePlaceholder(image);
+      drawing=item.hasAttribute('data-drawing');stage.classList.toggle('is-drawing',drawing);zoomBar.hidden=!drawing;
+      if(item.dataset.realSrc){
+        image.classList.add('ph-real');image.removeAttribute('data-ph');
+        const img=document.createElement('img');img.src=item.dataset.realSrc;img.alt=item.getAttribute('data-image-alt')||'Project image';image.append(img);
+        if(drawing){fitWidth=Math.min(innerWidth*.88,innerHeight*.65*(Number.isFinite(ratio)?ratio:1.5));setZoom(1);}
+      }else resolvePlaceholder(image);
       box.querySelector('[data-count]').textContent = `${current + 1} / ${items.length}`;
       box.querySelector('.lightbox__caption').textContent = item.getAttribute('data-image-alt') || 'Project image';
     }
@@ -685,8 +695,12 @@ ${body}
     box.addEventListener('keydown', event => {if(event.key === 'ArrowLeft' || event.key === 'ArrowRight'){event.preventDefault();render(current + (event.key === 'ArrowLeft' ? -1 : 1));}});
     let touch = null;
     stage.addEventListener('touchstart', event => {touch=event.touches.length===1 ? {x:event.touches[0].clientX,y:event.touches[0].clientY} : null;},{passive:true});
-    stage.addEventListener('touchend', event => {if(!touch)return;const dx=event.changedTouches[0].clientX-touch.x,dy=event.changedTouches[0].clientY-touch.y;if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5)render(current+(dx<0?1:-1));touch=null;},{passive:true});
+    stage.addEventListener('touchend', event => {if(!touch)return;const dx=event.changedTouches[0].clientX-touch.x,dy=event.changedTouches[0].clientY-touch.y;if(!drawing && Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5)render(current+(dx<0?1:-1));touch=null;},{passive:true});
     stage.addEventListener('touchcancel',()=>{touch=null;},{passive:true});
+    let pinch=null;
+    stage.addEventListener('touchstart',e=>{if(drawing&&e.touches.length===2)pinch={distance:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY),zoom};},{passive:true});
+    stage.addEventListener('touchmove',e=>{if(drawing&&pinch&&e.touches.length===2){e.preventDefault();setZoom(pinch.zoom*Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)/pinch.distance)}},{passive:false});
+    stage.addEventListener('touchend',()=>pinch=null,{passive:true});
     items.forEach((item,index) => item.addEventListener('click', () => {
       if (box.open) return;
       opener = item;

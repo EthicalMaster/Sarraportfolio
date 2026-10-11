@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import {createServer} from 'vite';
+const server=await createServer({configFile:false,server:{middlewareMode:true,hmr:false},appType:'custom',esbuild:{jsx:'automatic',jsxImportSource:'hono/jsx'}});
+try{
+ const {validateDraft,publicationErrors}=await server.ssrLoadModule('/src/admin/cloud-model.ts');
+ const {mergePublications}=await server.ssrLoadModule('/src/data/cloud-projects.ts');
+ const {existingProjectDrafts}=await server.ssrLoadModule('/src/admin/project-import.ts');
+ const {ProjectPage}=await server.ssrLoadModule('/src/work-pages.tsx');
+ const seed=existingProjectDrafts()[0],id='12345678-1234-1234-1234-123456789abc';
+ const draft={...seed,title:'Real building',slug:'real-building',sample:false,cover:{id,src:'/media/'+id,width:1600,height:1200,bytes:90000,alt:'Exterior courtyard',caption:'',mode:'photo',position:'center'},sections:[{id:'plans',type:'drawing',title:'Ground floor',text:'Arrival and circulation',images:[{id,src:'/media/'+id,width:1600,height:1200,bytes:90000,alt:'Ground-floor plan',caption:'Plan',mode:'drawing',position:'center'}]}]};
+ const safe=validateDraft(draft);assert.equal(publicationErrors(safe).length,0);
+ assert.ok(publicationErrors({...safe,sample:true}).length);
+ assert.throws(()=>validateDraft({...draft,cover:{...draft.cover,src:'https://evil.test'}}));
+ assert.throws(()=>validateDraft({...draft,sections:[{...draft.sections[0],id:'" onmouseover="x'}]}));
+ assert.throws(()=>validateDraft({...draft,sections:[{...draft.sections[0],images:Array(40).fill(draft.cover)}]}));
+ const published={project_id:seed.id,source_slug:seed.sourceSlug,slug:'real-building',active:true,document:safe};
+ const merged=mergePublications([published]);assert.equal(merged.length,8);assert.ok(!merged.some(p=>p.slug===seed.sourceSlug));assert.equal(merged.find(p=>p.slug==='real-building').title,'Real building');
+ const archived=mergePublications([{...published,active:false,document:null}]);assert.equal(archived.length,7);assert.ok(!archived.some(p=>p.slug===seed.sourceSlug));
+ const html=(await ProjectPage({project:merged.find(p=>p.slug==='real-building'),projects:merged}).toString());assert.ok(html.includes('Ground-floor plan'));assert.ok(html.includes('data-drawing'));assert.ok(!html.includes('Sample project ·'));assert.ok(!html.includes('study-6'));
+ const {default:app}=await server.ssrLoadModule('/src/index.tsx');
+ for(const path of ['/admin/api/projects','/admin/media/'+id])assert.equal((await app.request('http://test'+path)).status,503);
+ assert.equal((await app.request('http://test/admin/api/projects',{method:'POST',headers:{Origin:'https://other.test'},body:'{}'})).status,403);
+ console.log('Cloud content: validation, publication requirements, replacement/archive merge, real drawing rendering and unauthorised API denial pass.');
+}finally{await server.close()}

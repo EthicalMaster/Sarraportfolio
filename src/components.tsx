@@ -19,7 +19,15 @@ export function Ph(props: {
   parallax?: number
   class?: string
   lightbox?: boolean
+  contain?: boolean
+  position?: string
 }) {
+  if(props.src.startsWith('/media/')||props.src.startsWith('/admin/media/')){
+    const Tag=props.lightbox?'button':'div'
+    return <Tag class={`ph ph-real ${props.class||''}`} type={props.lightbox?'button':undefined} style={`aspect-ratio:${props.ratio||'4 / 3'}`} data-real-src={props.src} data-lightbox={props.lightbox?'':undefined} data-image-alt={props.alt} data-ratio={props.ratio} data-drawing={props.contain?'':undefined} aria-label={props.lightbox?`Open image: ${props.alt}`:undefined} aria-haspopup={props.lightbox?'dialog':undefined}>
+      <img src={props.src} alt={props.alt} loading={props.eager?'eager':'lazy'} decoding="async" style={`width:100%;height:100%;object-fit:${props.contain?'contain':'cover'};object-position:${props.position||'center'}`}/>
+    </Tag>
+  }
   const parts = props.src.replace(/^\/img\//, '').split('/')
   const key = `${parts[0] || 'x'}|${parts[1] || 'a'}`
   const style = props.ratio ? `aspect-ratio:${props.ratio};` : ''
