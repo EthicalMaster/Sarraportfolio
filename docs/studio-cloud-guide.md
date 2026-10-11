@@ -69,3 +69,7 @@ Production requires the same three environment settings documented in studio-aut
 Supabase's security advisor currently reports leaked-password protection disabled. Review this setting before production use: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection . Database and storage checks reported no other security advisories at implementation time.
 
 Validation completed: production build, automated tests, and rolled-back database checks covering draft privacy, publication snapshots, stale revisions, archive visibility and unrelated-user access. A signed-in browser upload/publish cycle still requires the owner's review; no password was requested or used.
+
+## Production login origin fix
+
+If login returns `Request origin not allowed`, use this corrected version and set Production `STUDIO_PUBLIC_ORIGIN` to `https://sarraportfolio-eight.vercel.app` (no trailing slash). The origin check compares browser Origin with this server-controlled value. Without an explicit value, Vercel's own production/deployment URL environment variables are used on Vercel; local development retains exact request-origin checks. Forwarded host headers are not used as an allowlist. Production cookies remain Secure behind the HTTPS proxy. Build and authentication/admin regression tests passed, including proxy-origin success and hostile/missing-origin denial. The owner's real password was not used for testing.

@@ -15,9 +15,9 @@ export function authConfig(c:Context){
 }
 export function createAuth(c:Context,config:NonNullable<ReturnType<typeof authConfig>>){
  return createServerClient(config.url,config.key,{
-  cookieOptions:{httpOnly:true,sameSite:'lax',secure:new URL(c.req.url).protocol==='https:',path:'/'},
+  cookieOptions:{httpOnly:true,sameSite:'lax',secure:secureCookies(c),path:'/'},
   cookies:{getAll:()=>parseCookieHeader(c.req.header('Cookie')||''),
-   setAll(cookies,headers){cookies.forEach(({name,value,options})=>setCookie(c,name,value,{...options,httpOnly:true,sameSite:'lax',secure:new URL(c.req.url).protocol==='https:',path:'/'}));Object.entries(headers||{}).forEach(([key,value])=>c.header(key,value));}
+   setAll(cookies,headers){cookies.forEach(({name,value,options})=>setCookie(c,name,value,{...options,httpOnly:true,sameSite:'lax',secure:secureCookies(c),path:'/'}));Object.entries(headers||{}).forEach(([key,value])=>c.header(key,value));}
   }
  })
 }
@@ -29,4 +29,20 @@ export async function authorisedUser(client:ReturnType<typeof createAuth>,ids:st
  const membership=await client.from('studio_editors').select('user_id').eq('user_id',user.id).maybeSingle()
  return !membership.error&&membership.data?.user_id===user.id?user:null
 }
-export function sameOrigin(c:Context){return c.req.header('Origin')===new URL(c.req.url).origin}
+export function studioOrigins(c:Context){
+ const e=env<{STUDIO_PUBLIC_ORIGIN?:string;VERCEL?:string;VERCEL_URL?:string;VERCEL_PROJECT_PRODUCTION_URL?:string}>(c)
+ const origins:string[]=[]
+ // Server-controlled configuration only. Never derive trust from Origin/Forwarded headers.
+ const add=(value:string)=>{try{const u=new URL(value);if(u.origin===value&&u.protocol==='https:'&&!u.username&&!u.password)origins.push(u.origin)}catch{}}
+ if(e.STUDIO_PUBLIC_ORIGIN){add(e.STUDIO_PUBLIC_ORIGIN.trim());return origins}
+ if(e.VERCEL==='1'){
+  for(const host of [e.VERCEL_PROJECT_PRODUCTION_URL,e.VERCEL_URL])if(host&&/^[a-z0-9.-]+$/i.test(host))add('https://'+host)
+  return origins
+ }
+ return [new URL(c.req.url).origin]
+}
+export function secureCookies(c:Context){
+ const e=env<{VERCEL?:string;STUDIO_PUBLIC_ORIGIN?:string}>(c)
+ return e.VERCEL==='1'||!!e.STUDIO_PUBLIC_ORIGIN||new URL(c.req.url).protocol==='https:'
+}
+export function sameOrigin(c:Context){const origin=c.req.header('Origin');return !!origin&&studioOrigins(c).includes(origin)}
