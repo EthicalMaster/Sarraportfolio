@@ -12,8 +12,9 @@ Server environment variables (never commit populated values):
   authorised for this portfolio. Empty configuration denies access.
 
 Use the hosting environment-variable interface for deployed values. For local
-Hono/Vite development, export these server environment variables before starting
-the dev server. Do not assume Vite automatically exposes .env values to process.env.
+Hono/Vite development, copy the supplied studio.env to .env.local. The Vite
+configuration explicitly loads these three server-only values. .env.local is ignored
+by Git. Deployment still needs these settings in the hosting environment.
 
 ## Account setup
 
@@ -59,3 +60,7 @@ anonymous clients cannot read draft rows and authenticated clients cannot insert
 their own editor membership. See studio-schema.sql for the applied SQL.
 Cloud data/upload routes and UI synchronisation are still pending; creating these
 tables has not moved any browser drafts or enabled publishing.
+
+Sarra’s confirmed account is now recorded in studio_editors. Access requires both
+the server UUID allowlist and a current database membership. No actual password
+has been collected or used by the assistant. Real sign-in remains user-tested.

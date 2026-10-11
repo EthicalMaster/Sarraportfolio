@@ -5,13 +5,14 @@ try {
  const {authorisedUser}=await server.ssrLoadModule('/src/admin/auth.ts');
  const allowed='a1234567-1234-1234-1234-123456789abc';
  const user={id:allowed,email_confirmed_at:'2026-10-10',is_anonymous:false};
- const client=(u,error=null)=>({auth:{getUser:async()=>({data:{user:u},error})}});
+ const client=(u,error=null,member=true)=>({auth:{getUser:async()=>({data:{user:u},error})},from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:member?{user_id:u?.id}:null,error:null})})})})});
  assert.equal((await authorisedUser(client(user),[allowed])).id,allowed);
  assert.equal(await authorisedUser(client({...user,id:'other',user_metadata:{admin:true}}),[allowed]),null);
  assert.equal(await authorisedUser(client({...user,email_confirmed_at:null}),[allowed]),null);
  assert.equal(await authorisedUser(client({...user,is_anonymous:true}),[allowed]),null);
  assert.equal(await authorisedUser(client(user,Error('expired')),[allowed]),null);
  assert.equal(await authorisedUser(client(null),[allowed]),null);
+ assert.equal(await authorisedUser(client(user,null,false),[allowed]),null);
  const {default:app}=await server.ssrLoadModule('/src/index.tsx');
  const login=await app.request('http://test/admin/login',{method:'POST',headers:{Origin:'http://test','Content-Type':'application/x-www-form-urlencoded'},body:'email=a%40b.com&password=test'});
  assert.equal(login.status,503);assert.ok(!(await login.text()).includes('password=test'));

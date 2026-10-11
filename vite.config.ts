@@ -1,9 +1,15 @@
 import build from '@hono/vite-build/vercel'
 import devServer from '@hono/vite-dev-server'
 import adapter from '@hono/vite-dev-server/cloudflare'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Read server-only settings locally; do not expose them as VITE_* variables.
+  const local = loadEnv(mode, process.cwd(), '')
+  for (const key of ['SUPABASE_URL','SUPABASE_PUBLISHABLE_KEY','STUDIO_ALLOWED_USER_IDS']) {
+    if (!process.env[key] && local[key]) process.env[key] = local[key]
+  }
+  return {
   plugins: [
     build(),
     devServer({
@@ -11,4 +17,5 @@ export default defineConfig({
       entry: 'src/index.tsx'
     })
   ]
+  }
 })

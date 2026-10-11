@@ -25,6 +25,8 @@ export async function authorisedUser(client:ReturnType<typeof createAuth>,ids:st
  // getUser verifies against Auth; cookie contents and editable metadata are not trusted.
  const {data,error}=await client.auth.getUser()
  const user=data?.user
- return !error&&user&&user.email_confirmed_at&&!user.is_anonymous&&ids.includes(user.id)?user:null
+ if(error||!user||!user.email_confirmed_at||user.is_anonymous||!ids.includes(user.id))return null
+ const membership=await client.from('studio_editors').select('user_id').eq('user_id',user.id).maybeSingle()
+ return !membership.error&&membership.data?.user_id===user.id?user:null
 }
 export function sameOrigin(c:Context){return c.req.header('Origin')===new URL(c.req.url).origin}
