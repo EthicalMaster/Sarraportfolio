@@ -16,6 +16,12 @@ The cloud schema and cleanup migrations have already been applied to the connect
 
 Publishing changes the shared cloud database immediately, including any other deployment connected to it. The current static main branch will use cloud content only after this code is deployed. Review locally before merging or deploying.
 
+## Upload correction and guided editor
+
+The upload completion check now reads the installed Storage SDK’s top-level `size` and `contentType` fields. Previously, valid uploaded files were rejected because the check looked only inside `metadata`. The corrected check still rejects missing files, mismatched sizes and unsupported types. Existing failed uploads remain private and can later be removed through unused-upload cleanup.
+
+Project entry now uses four steps: Basics, Cover, Story and Images. Switching steps retains working values but does not save them; use Save draft. Per-image descriptions, captions and display controls are collapsed until opened.
+
 ## Everyday editing
 
 - **Save draft** stores private working content and prepared images in the cloud. It does not update a published snapshot.

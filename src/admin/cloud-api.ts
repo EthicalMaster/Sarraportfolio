@@ -2,6 +2,11 @@ import { Hono } from 'hono'
 import { createAuth, authConfig } from './auth'
 import { validateDraft, imageList, publicationErrors } from './cloud-model'
 const bucket='studio-drafts'
+export function uploadMatches(info:any,bytes:number){
+ const size=info?.size??info?.metadata?.size;
+ const type=info?.contentType??info?.metadata?.mimetype;
+ return Number.isSafeInteger(size)&&size===bytes&&['image/webp','image/jpeg','image/png'].includes(type);
+}
 const uuid=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i
 export const cloud=new Hono()
 // Mounted behind the verified studio auth middleware. Always uses the editor's JWT.
@@ -34,7 +39,7 @@ cloud.post('/upload/:id/complete',async c=>{
  const db=client(c),asset=await db.from('studio_assets').select('*').eq('id',id).single()
  if(asset.error)return c.json({error:'Upload not found'},404)
  const info=await db.storage.from(bucket).info(asset.data.object_path)
- if(info.error||Number(info.data.metadata?.size)!==asset.data.byte_size||!['image/webp','image/jpeg','image/png'].includes(info.data.metadata?.mimetype))return c.json({error:'Upload is incomplete or its format is invalid'},409)
+ if(info.error||!uploadMatches(info.data,asset.data.byte_size))return c.json({error:'Upload is incomplete or its format is invalid'},409)
  const changed=await db.from('studio_assets').update({ready:true}).eq('id',id)
  if(changed.error)return c.json({error:'Could not finish upload'},503)
  return c.json({src:`/media/${id}`,id})

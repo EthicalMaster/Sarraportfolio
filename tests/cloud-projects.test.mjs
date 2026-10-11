@@ -2,6 +2,15 @@ import assert from 'node:assert/strict';
 import {createServer} from 'vite';
 const server=await createServer({configFile:false,server:{middlewareMode:true,hmr:false},appType:'custom',esbuild:{jsx:'automatic',jsxImportSource:'hono/jsx'}});
 try{
+ const {uploadMatches}=await server.ssrLoadModule('/src/admin/cloud-api.ts');
+ const {createClient}=await import('@supabase/supabase-js');
+ const storage=createClient('https://test.supabase.co','test-key',{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:async()=>new Response(JSON.stringify({size:21154,content_type:'image/webp',name:'test.webp'}),{status:200,headers:{'Content-Type':'application/json'}})}});
+ const actualSDKResponse=await storage.storage.from('studio-drafts').info('test.webp');
+ assert.equal(actualSDKResponse.error,null);
+ assert.ok(uploadMatches(actualSDKResponse.data,21154),'Accept SDK info top-level size/contentType');
+ assert.ok(!uploadMatches(actualSDKResponse.data,21155),'Reject mismatched byte count');
+ assert.ok(!uploadMatches({...actualSDKResponse.data,contentType:'text/html'},21154),'Reject unsupported MIME');
+ assert.ok(!uploadMatches(null,21154),'Reject missing upload');
  const {validateDraft,publicationErrors}=await server.ssrLoadModule('/src/admin/cloud-model.ts');
  const {mergePublications}=await server.ssrLoadModule('/src/data/cloud-projects.ts');
  const {existingProjectDrafts}=await server.ssrLoadModule('/src/admin/project-import.ts');
