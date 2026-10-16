@@ -1,3 +1,4 @@
+import {analytics} from './analytics'
 import { portfolio, publicMedia, homepageSettings, homepageSelection } from './data/cloud-projects'
 import { studio } from './admin/routes'
 import { Hono } from 'hono'
@@ -18,6 +19,7 @@ import type { Project } from './data/projects'
 const app = new Hono()
 
 app.route('/admin', studio)
+app.route('/_portfolio/event',analytics)
 
 app.get('/media/:id',publicMedia)
 app.use(renderer)

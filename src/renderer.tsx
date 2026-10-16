@@ -52,6 +52,7 @@ export const renderer = jsxRenderer(({ children, title, description }) => {
           href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23141312'/%3E%3Ctext x='16' y='23' font-family='serif' font-size='20' fill='%23c8a97e' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E"
         />
         <script defer src="/static/arrival.js"></script>
+        <script defer src="/static/analytics.js"></script>
         <script defer src="/static/app.js"></script>
         <script defer src="/static/home-motion.js"></script>
         <script defer src="/static/interaction.js"></script>

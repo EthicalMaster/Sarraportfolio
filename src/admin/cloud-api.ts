@@ -1,3 +1,4 @@
+import {analyticsReport} from '../analytics'
 import {portfolio,homepageSettings,homepageSelection} from '../data/cloud-projects'
 import { Hono } from 'hono'
 import { createAuth, authConfig } from './auth'
@@ -10,6 +11,7 @@ export function uploadMatches(info:any,bytes:number,video=false){
 }
 const uuid=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i
 export const cloud=new Hono()
+cloud.get('/analytics',analyticsReport)
 // Mounted behind the verified studio auth middleware. Always uses the editor's JWT.
 const client=(c:any)=>createAuth(c,authConfig(c)!)
 cloud.get('/projects',async c=>{
